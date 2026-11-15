@@ -96,6 +96,20 @@ function load({ languages = ["en-US"], saved, table = HE, fail = false, langs = 
     assert.strictEqual(i18n.t("Save"), "Save");
   });
 
+  await test("load: false leaves the table to the app; a table registered later is used", async () => {
+    global.window = { localStorage: { getItem: () => "he" } };
+    Object.defineProperty(globalThis, "navigator", { value: { languages: ["en"] }, configurable: true });
+    const added = [];
+    global.document = { documentElement: {}, head: { appendChild: (s) => added.push(s) }, createElement: () => ({}) };
+    delete require.cache[FILE];
+    require(FILE);
+    const i18n = window.Keel.i18n.create({ key: "app.lang", langs: ["en", "he"], load: false });
+    assert.strictEqual(await i18n.ready, "he");
+    assert.deepStrictEqual([added.length, i18n.t("Save")], [0, "Save"]);
+    window.Keel.i18n.strings("he", { Save: "שמירה" });
+    assert.strictEqual(i18n.t("Save"), "שמירה");
+  });
+
   await test("the setting: saved, follows the device when cleared, refuses a language the app lacks", async () => {
     const { i18n, items } = load({ languages: ["en"] });
     assert.strictEqual(i18n.set("he"), true);

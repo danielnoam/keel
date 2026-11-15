@@ -23,7 +23,8 @@
 //   i18n.date(d, opts), time(d, opts), number(n, opts), relative(v, unit),
 //   join(items, opts), region(code), language(code), compare(a, b)
 //
-// A language's table is src/lang/<code>.js, loaded when it's needed:
+// A language's table is src/lang/<code>.js, loaded when it's needed
+// (load: false when the app loads it itself, say before its first paint):
 //
 //   Keel.i18n.strings("he", { "Save": "שמירה", "{n} pages": { one: "עמוד אחד", other: "{n} עמודים" } });
 //
@@ -44,7 +45,7 @@
     tables[lang] = Object.assign(tables[lang] || {}, table);
   }
 
-  function create({ key, langs = ["en"], fallback = "en", path = "src/lang/", version = "", device: follow = true } = {}) {
+  function create({ key, langs = ["en"], fallback = "en", path = "src/lang/", version = "", device: follow = true, load = true } = {}) {
     const store = (() => { try { return window.localStorage; } catch (e) { return null; } })();
     const read = () => { try { return (store && key && store.getItem(key)) || ""; } catch (e) { return ""; } };
     const choice = langs.includes(read()) ? read() : "";
@@ -60,7 +61,7 @@
     root.lang = lang;
     root.dir = dir;
 
-    const ready = lang === fallback || tables[lang] ? Promise.resolve(lang) : new Promise((resolve) => {
+    const ready = lang === fallback || tables[lang] || !load ? Promise.resolve(lang) : new Promise((resolve) => {
       const s = document.createElement("script");
       s.src = path + lang + ".js" + (version ? "?v=" + version : "");
       s.onload = () => resolve(lang);
