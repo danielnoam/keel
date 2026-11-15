@@ -14,6 +14,11 @@ and no dependencies**, started from keel's template.
 - `main` takes pull requests only. Open the PR, merge it once Tests is
   green, then check the runs.
 - Lines for the changelog go in `changes/<branch>.md`, never CHANGELOG.md.
+- Builds are the web app, Windows and the APK by default. iOS and Linux
+  only when Daniel asks (run `ios.yml`, or `desktop.yml` with Linux ticked,
+  or label the PR `test-ios` / `test-linux`).
+- To try a change on a phone before it merges, label its PR `test` and
+  say the build is on the `test-<branch>` pre-release.
 - Shared files come from keel (danielnoam/keel): change them there, then
   sync with `node tools/keel-sync.js v<x.y.z>` in its own PR.
 

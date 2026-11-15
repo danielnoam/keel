@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- The template's native side, shaped like LifeLog (phone and desktop):
+  Capacitor 8 for Android and iOS, Tauri 2 for Windows and Linux, the
+  build tools and the workflows (Android release, Desktop, iOS by hand,
+  test builds by label, Pages after the tests). `keel-new.js` takes
+  `--owner` for the app id. `template-native.yml` builds a new app's APK,
+  desktop app and iOS app on every pull request that touches the
+  template. Kept in keel only, so no version bump.
+
 ## [0.8.0] - 2026-11-15
 
 ### Added

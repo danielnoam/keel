@@ -1,0 +1,179 @@
+# Builds the Android app from the same files GitHub Pages serves, and
+# publishes it as a release when APP_VERSION is new. The app is bundled
+# rather than loaded from Pages, so it works offline from the first launch
+# and a bad deploy can't break the installed app.
+name: Android app
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore: ["**.md", "test/**", ".claude/**", "docs/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # main builds when APP_VERSION is new (a release) or the native side
+  # changed. Any other branch builds when its open pull request carries a
+  # test label (test or test-android), so a branch push doesn't spend a
+  # build nobody asked for, or when the workflow is run by hand: that APK
+  # gets the throwaway key and no pre-release, since only a label makes a
+  # test build.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.g.outputs.build }}
+      test: ${{ steps.g.outputs.test }}
+    steps:
+      - id: g
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GITHUB_REF" = refs/heads/main ]; then
+            # A merge to main builds when it carries a new APP_VERSION (a
+            # release) or touches the native or build side; a plain app change
+            # is already covered by the PR's Tests check, so it's web only.
+            # Run by hand to build anyway.
+            V=$(gh api "repos/$GITHUB_REPOSITORY/contents/src/app.js?ref=$GITHUB_SHA" -H "Accept: application/vnd.github.raw" | sed -n 's/.*const APP_VERSION = "\([^"]*\)".*/\1/p' || true)
+            NATIVE=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$GITHUB_SHA" --jq '.files[].filename' 2>/dev/null | grep -E '^(src-tauri/|assets/|\.github/workflows/|tools/(build-www|android-|ios-project|desktop-files|sign-apk|test-build)|package(-lock)?\.json$|capacitor\.config)' | head -3 || true)
+            if [ "$GITHUB_EVENT_NAME" = push ] && [ -n "$V" ] && [ -z "$NATIVE" ] && gh release view "app-v$V" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "app-v$V is already released and nothing native changed, so this merge builds nothing"
+              echo "build=false" >> "$GITHUB_OUTPUT"
+            else
+              [ -n "$NATIVE" ] && echo "Native or build files changed: $NATIVE"
+              echo "build=true" >> "$GITHUB_OUTPUT"
+            fi
+            echo "test=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          LABELS=",$(gh pr list -R "$GITHUB_REPOSITORY" --head "$BRANCH" --state open --json labels --jq '.[:1][] | [.labels[].name] | join(",")' 2>/dev/null || true),"
+          case "$LABELS" in
+            *,test,*|*,test-android,*) echo "build=true" >> "$GITHUB_OUTPUT"; echo "test=true" >> "$GITHUB_OUTPUT" ;;
+            *) if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+                 echo "Run by hand without a test label: an APK with a throwaway key, kept as this run's artifact only"
+                 echo "build=true" >> "$GITHUB_OUTPUT"
+               else
+                 echo "$BRANCH has no open pull request labelled test or test-android, so no APK build"
+                 echo "build=false" >> "$GITHUB_OUTPUT"
+               fi
+               echo "test=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+  test:
+    needs: gate
+    if: needs.gate.outputs.build == 'true'
+    uses: ./.github/workflows/tests.yml
+
+  apk:
+    needs: [gate, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # No Android setup step: ubuntu-latest ships the SDK (ANDROID_HOME) with
+      # its licences accepted, and Gradle fetches any platform it lacks.
+      # android-actions/setup-android@v3 tried to install the long-removed
+      # "tools" package and failed before anything else ran.
+      - name: Check the Android SDK
+        run: |
+          test -n "$ANDROID_HOME" && test -d "$ANDROID_HOME/build-tools"
+          ls "$ANDROID_HOME/build-tools" | sort -V | tail -3
+
+      - run: npm ci
+
+      - name: Bundle the web app
+        run: node tools/build-www.js
+
+      - name: Generate the Android project
+        run: |
+          npx cap add android
+          node tools/android-manifest.js
+
+      - name: Icon and splash
+        run: >-
+          npx --yes @capacitor/assets@3 generate --android
+          --iconBackgroundColor '#F6F5F2' --iconBackgroundColorDark '#F6F5F2'
+          --splashBackgroundColor '#F6F5F2' --splashBackgroundColorDark '#F6F5F2'
+
+      - name: Stamp the version
+        id: v
+        run: |
+          node tools/android-version.js
+          echo "version=$(node -p "require('./tools/build-www').appVersion()")" >> "$GITHUB_OUTPUT"
+
+      - run: npx cap sync android
+
+      - name: Build
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Sign
+        id: sign
+        # The release key signs main and a pull request labelled for a test
+        # build, which has to install over the released app to be tried.
+        # Nothing else gets it: an APK signed with the real key installs
+        # over everyone's app. Only people with write access can push a
+        # branch or add a label, and a fork's pull request never sees the
+        # repo's secrets.
+        env:
+          KEYSTORE_B64: ${{ (github.ref == 'refs/heads/main' || needs.gate.outputs.test == 'true') && secrets.ANDROID_KEYSTORE_B64 || '' }}
+          KEYSTORE_PASSWORD: ${{ (github.ref == 'refs/heads/main' || needs.gate.outputs.test == 'true') && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+        run: bash tools/sign-apk.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          # Both branches non-empty: `cond && '' || 'x'` is always 'x' in an
+          # Actions expression, because '' is falsy.
+          name: __APPNS__-${{ steps.v.outputs.version }}${{ steps.sign.outputs.signed == 'true' && '-release-key' || '-throwaway-key' }}
+          path: __APPNS__.apk
+
+      # Only from main, only with the real key, and only once per version: the
+      # app looks for releases/latest/download/__APPNS__.apk, and each one has
+      # to install over the last.
+      - name: Publish the release
+        if: github.ref == 'refs/heads/main' && steps.sign.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          if gh release view "app-v$V" >/dev/null 2>&1; then
+            echo "app-v$V is already released"; exit 0
+          fi
+          awk -v v="$V" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "---"
+            echo "**Installing:** open this page on your phone, tap **__APPNS__.apk**, and allow your browser to install apps the first time it asks. Updates install over the top and keep your data."
+            echo
+            echo "**iPhone:** **__APPNS__.ipa** is added here only when an iOS build is run. It's unsigned: install it with AltStore or SideStore, which sign it with your own Apple ID."
+            echo
+            echo "**Windows:** **__APPNS__-setup.exe** is added here a few minutes later (**__APPNS__.AppImage** and __APPNS__.deb only when a Linux build is run). Windows may warn that it doesn't know the publisher: choose More info, then Run anyway."
+          } >> notes.md
+          gh release create "app-v$V" __APPNS__.apk --target "$GITHUB_SHA" --title "__NAME__ $V" --notes-file notes.md
+
+      # A branch whose pull request is labelled test or test-android: the APK
+      # goes on the pre-release test-<branch>, remade on every push. Never
+      # "latest", so the app's updater never offers it.
+      - name: Publish the test build
+        if: github.ref != 'refs/heads/main' && needs.gate.outputs.test == 'true' && steps.sign.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.v.outputs.version }}
+        run: bash tools/test-build.sh create __APPNS__.apk

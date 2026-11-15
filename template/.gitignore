@@ -1,1 +1,12 @@
 node_modules/
+
+# The native builds' outputs, not sources: www/ and www-desktop/ are copied
+# from the app by tools/build-www.js, android/ and ios/ are made by
+# Capacitor in CI, and src-tauri's are Tauri's.
+/www/
+/www-desktop/
+/android/
+/ios/
+/src-tauri/target/
+/src-tauri/gen/
+/src-tauri/icons/

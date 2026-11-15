@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# Puts a pull request's build on the pre-release test-<branch>.
+#
+#   bash tools/test-build.sh create __APPNS__.apk   # android.yml
+#   bash tools/test-build.sh attach __APPNS__.ipa   # ios.yml
+#   bash tools/test-build.sh desktop out/*        # desktop.yml
+#
+# Only an open pull request labelled test, test-android or test-ios gets
+# one; `create` remakes the pre-release (and its tag) at the pushed commit
+# on every push, and `attach` waits for the one at this commit and adds its
+# file (or makes it, for test-ios alone). A pre-release is never GitHub's
+# "latest", so the app's updater, which reads releases/latest, never offers
+# it. The notes start with four lines an app screen can read: version,
+# branch, commit, pr. .github/workflows/test-builds.yml builds it when the
+# label goes on and removes it when the label comes off, the pull request
+# closes or the branch goes.
+# Needs GH_TOKEN, V (the app version), GITHUB_SHA, GITHUB_REF_NAME and
+# GITHUB_REPOSITORY.
+set -euo pipefail
+MODE="$1"
+shift
+FILES=("$@")
+FILE="${FILES[0]}"
+BRANCH="${GITHUB_REF_NAME:?}"
+TAG="test-$(printf '%s' "$BRANCH" | tr -c 'A-Za-z0-9._-' '-')"
+PR="$(gh pr list --head "$BRANCH" --state open --json number,title,labels --jq '.[:1][] | "\(.number)\t\([.labels[].name] | join(","))\t\(.title)"' 2>/dev/null || true)"
+if [ -z "$PR" ]; then
+  echo "$BRANCH has no open pull request, so no test build"
+  exit 0
+fi
+NUMBER="${PR%%	*}"
+REST="${PR#*	}"
+LABELS=",${REST%%	*},"
+TITLE="${REST#*	}"
+# `test` for both, `test-android` for the APK alone, `test-ios` for the
+# IPA alone, so a one-platform test build is ready sooner.
+# `test-desktop` for the Windows and Linux files alone.
+APK=false; IPA=false; DESKTOP=false
+case "$LABELS" in *,test,*|*,test-android,*) APK=true ;; esac
+case "$LABELS" in *,test,*|*,test-ios,*) IPA=true ;; esac
+case "$LABELS" in *,test,*|*,test-desktop,*) DESKTOP=true ;; esac
+
+publish() {
+  gh release delete "$TAG" --yes --cleanup-tag >/dev/null 2>&1 || true
+  {
+    echo "version: ${V:?}"
+    echo "branch: $BRANCH"
+    echo "commit: $GITHUB_SHA"
+    echo "pr: $NUMBER"
+    echo
+    echo "A test build of pull request #$NUMBER, built from \`$BRANCH\` at $GITHUB_SHA. It isn't a release: the app's update check never offers it. On Android, install __APPNS__.apk from this page: it installs over the __NAME__ you have and keeps your data, and the next release installs back over it as long as this branch didn't raise the version."
+    if [ "$APK" = true ] && [ "$IPA" = true ]; then
+      echo
+      echo "**iPhone:** __APPNS__.ipa is added a few minutes later, unsigned; install it with AltStore or SideStore."
+    elif [ "$IPA" = true ]; then
+      echo
+      echo "**iPhone only:** __APPNS__.ipa is unsigned; install it with AltStore or SideStore."
+    fi
+    if [ "$DESKTOP" = true ]; then
+      echo
+      echo "**Windows and Linux:** __APPNS__-setup.exe and __APPNS__.AppImage are added when they're built. Each installs over the desktop app you have and keeps its data."
+    fi
+  } > test-notes.md
+  gh release create "$TAG" "${FILES[@]}" --prerelease --target "$GITHUB_SHA" --title "Test: $TITLE" --notes-file test-notes.md
+  echo "published $TAG for #$NUMBER at $GITHUB_SHA"
+}
+
+case "$MODE" in
+  create)
+    if [ "$APK" != true ]; then echo "#$NUMBER isn't labelled test or test-android, so no APK test build"; exit 0; fi
+    publish
+    ;;
+  attach)
+    if [ "$IPA" != true ]; then echo "#$NUMBER isn't labelled test or test-ios, so no IPA test build"; exit 0; fi
+    if [ "$APK" != true ]; then publish; exit 0; fi
+    for i in $(seq 1 40); do
+      if [ "$(gh release view "$TAG" --json targetCommitish --jq .targetCommitish 2>/dev/null || true)" = "$GITHUB_SHA" ]; then
+        gh release upload "$TAG" "$FILE" --clobber
+        echo "attached $FILE to $TAG"
+        exit 0
+      fi
+      sleep 30
+    done
+    echo "No $TAG pre-release at $GITHUB_SHA after 20 minutes (did the Android build publish one?)"
+    exit 1
+    ;;
+  desktop)
+    if [ "$DESKTOP" != true ]; then echo "#$NUMBER isn't labelled test or test-desktop, so no desktop test build"; exit 0; fi
+    # With no APK or IPA coming, the Linux job makes the pre-release and the
+    # Windows one waits for it, so the two never remake it over each other.
+    if [ "$APK" != true ] && [ "$IPA" != true ] && [[ "${FILES[*]}" == *.AppImage* ]]; then publish; exit 0; fi
+    for i in $(seq 1 40); do
+      if [ "$(gh release view "$TAG" --json targetCommitish --jq .targetCommitish 2>/dev/null || true)" = "$GITHUB_SHA" ]; then
+        gh release upload "$TAG" "${FILES[@]}" --clobber
+        echo "attached ${FILES[*]} to $TAG"
+        exit 0
+      fi
+      sleep 30
+    done
+    echo "No $TAG pre-release at $GITHUB_SHA after 20 minutes"
+    exit 1
+    ;;
+  *)
+    echo "usage: test-build.sh create|attach|desktop <file>..."
+    exit 2
+    ;;
+esac
