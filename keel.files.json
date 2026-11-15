@@ -1,10 +1,11 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "files": [
     "server.js",
     "src/keel/qr.js",
     "src/keel/github.js",
     "src/keel/drive.js",
+    "src/keel/errlog.js",
     "tools/release.js",
     "tools/android-version.js",
     "tools/keel-sync.js",

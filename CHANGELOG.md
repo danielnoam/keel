@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0] - 2026-11-15
+
+### Added
+- `src/keel/errlog.js`, on `window.Keel.errlog`: the errors this device
+  hit, from LifeLog's errlog.js and Waypage's log in platform.js. Load it
+  before every other script; its tag sets the localStorage key
+  (`data-key`), how many to keep (`data-keep`) and whether console.error
+  is kept too (`data-console`). Entries carry the time, a kind, the
+  message, the first stack lines and the build (from `?v=`); a repeat
+  counts up. Addresses lose their query and token-like text is cut, as
+  Waypage did. `record`, `note(kind, text)`, `list`, `asText`, `clear`,
+  `restore`. Entries from before (an ISO time, no kind) still read.
+
+### Fixed
+- `tools/keel-sync.js` no longer prints git's detached-HEAD advice when
+  it clones a tag.
+
 ## [0.3.0] - 2026-11-15
 
 ### Added
