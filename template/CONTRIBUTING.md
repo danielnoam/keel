@@ -42,6 +42,14 @@ desktop app, at phone and desktop width. A native plugin or permission is
 added in `package.json` and `tools/android-manifest.js` /
 `tools/ios-project.js` / `src-tauri/`, with its reason beside it.
 
+**English and Hebrew.** Every word the app shows goes through `t()` (or
+`data-t` in index.html) in English, and its Hebrew goes in
+`src/lang/he.js` in the same change (`test/i18n.test.js` fails
+otherwise). Layout uses logical sides (`margin-inline-start`,
+`inset-inline-end`, `text-align: start`), never left and right, so it
+mirrors in Hebrew. Text people type or bring in gets `dir="auto"`. Dates
+and numbers go through `i18n.date()` and `i18n.number()`.
+
 **Design.** Colours are tokens in `src/styles.css`, every theme passes
 WCAG AA (`test/contrast.test.js`), touch targets are 44 px, and every
 animation has a reduced-motion answer. Moves go through keel's motion

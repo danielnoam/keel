@@ -12,13 +12,16 @@ icon.svg             the app icon
 sw.js                the web copy's service worker: offline, test builds (keel's sw-preview.js)
 src/app.js           the app; APP_VERSION
 src/styles.css       the tokens per theme, then the styles
+src/lang/he.js       the Hebrew words, keyed by the English in t() (loaded only in Hebrew)
 src/keel/errlog.js   the errors this device hit (from keel, loaded first)
 src/keel/platform.js where it runs: browser, phone or desktop (from keel)
+src/keel/i18n.js     the reader's language: t(), rtl, dates and numbers (from keel)
 src/keel/releases.js the update check and test builds (from keel)
 src/keel/motion.js   springs and moves, made in app.js (from keel)
 src/keel/sw-preview.js  the service worker's half of a test build (from keel)
 test/run-all.js      runs every test/*.test.js
 test/app.test.js     index.html, sw.js's ASSETS and the version agree
+test/i18n.test.js    every language's table has the words the code uses (keel's check)
 test/csp.test.js     the policy and the code under it (keel's check)
 test/contrast.test.js  every theme's colour pairs pass WCAG AA (keel's check)
 test/keel.test.js    keel's files weren't edited here (from keel)

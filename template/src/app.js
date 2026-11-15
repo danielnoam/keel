@@ -1,12 +1,22 @@
 // __NAME__: the app. keel's files (src/keel/) load before it: errlog.js
-// first, then platform.js (where it runs), releases.js (updates) and
-// motion.js (springs and moves).
+// first, then platform.js (where it runs), i18n.js (the reader's
+// language), releases.js (updates) and motion.js (springs and moves).
 (function () {
   const APP_VERSION = "0.1.0";
   const K = window.Keel;
   const $ = (id) => document.getElementById(id);
 
-  $("version").textContent = APP_VERSION;
+  // Words go through t() in English; src/lang/<code>.js has each other
+  // language (test/i18n.test.js checks they match). The language follows
+  // the device until the app offers a picker (i18n.list(), i18n.set()).
+  // <html> gets lang and dir, so the CSS uses logical sides
+  // (margin-inline-start, not margin-left) and works both ways.
+  const i18n = K.i18n.create({ key: "__SLUG__.lang", langs: ["en", "he"], version: APP_VERSION });
+  const t = i18n.t;
+  i18n.ready.then(() => {
+    i18n.apply();
+    $("version").textContent = t("Version {v}", { v: APP_VERSION });
+  });
 
   // The theme follows the system's light or dark.
   const dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
@@ -28,7 +38,7 @@
     K.platform.ready.then(() => releases.latest()).then((r) => {
       if (!r || !K.releases.newer(r.version, APP_VERSION)) return;
       const el = $("update");
-      el.textContent = "Version " + r.version + " is out.";
+      el.textContent = t("Version {v} is out.", { v: r.version });
       el.hidden = false;
     }).catch(() => { /* offline: ask again next launch */ });
   }
@@ -38,5 +48,5 @@
   // there is one) says which moves it uses.
   const motion = K.motion.create();
 
-  window.__APPNS__ = { version: APP_VERSION, releases, motion };
+  window.__APPNS__ = { version: APP_VERSION, i18n, releases, motion };
 })();

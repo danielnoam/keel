@@ -19,12 +19,13 @@ serves straight from the repo and the native builds need no extra step.
 | `src/keel/errlog.js` | The errors this device hit, on `window.Keel.errlog`: loaded first, set up by its own tag (`data-key`, `data-keep`, `data-console`), tokens and address queries cut, repeats counted |
 | `src/keel/platform.js` | Where the app runs, on `window.Keel.platform`: phone (`native`, `os`, `plugin()`), desktop (Tauri), browser; `app-build.json`; links to other sites go to the device's browser; `deadline()`. Each app's platform.js keeps the rest |
 | `src/keel/motion.js` | Springs sampled into CSS `linear()` and the moves made with them, on `window.Keel.motion.create({touch, desktop, ...})`: screens, sheets, menus, dialogs, lists, press feedback; reduced motion and Animations off handled. Each app passes its own springs |
+| `src/keel/i18n.js` | The reader's language, on `window.Keel.i18n.create({key, langs})`: `t("English")` keyed by the English (shown as is until a table has it), plurals, `{name}` filling, `data-t` markup, `lang` and `dir="rtl"` on `<html>`, the device's language or a saved choice, dates, numbers and lists through `Intl`. Each app keeps its tables in `src/lang/<code>.js` |
 | `src/keel/releases.js` | The app's own releases, on `window.Keel.releases`: the latest one (update check), the test builds list, opening a test build in the browser. Each app keeps its bar and screens |
 | `src/keel/sw-preview.js` | The service worker's half of a test build in the browser (`importScripts`): that commit's files, the Back to the release bar |
 | `tools/release.js` | `node tools/release.js x.y.z`: bumps APP_VERSION, `?v=` tags and the sw.js cache, folds `changes/*.md` into CHANGELOG.md |
 | `tools/android-version.js` | Stamps APP_VERSION into the Android project's versionCode |
 | `tools/keel-sync.js` | Pulls a keel release into an app and checks it |
-| `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, and its Content-Security-Policy and the code under it |
+| `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, its Content-Security-Policy and the code under it, and each language's table against the words the code uses (missing, stale, broken `{name}`) |
 | `test/keel.test.js` | Fails an app's tests if a keel file was edited there |
 | `.claude/skills/github-pages` | The GitHub Pages skill |
 
