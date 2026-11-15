@@ -17,6 +17,8 @@ README.md first.
   in CHANGELOG.md). The merge tags `v<version>` by itself
   (`.github/workflows/tag.yml`); a session can't push tags. A change to
   a file outside keel.files.json (CI, docs) needs no bump.
+- `template/` and `tools/keel-new.js` are keel's own (a new app's start), never synced:
+  `test/template.test.js` makes an app from them and runs its tests.
 - A file added to or removed from keel is added to or removed from
   keel.files.json and README.md's table in the same change.
 - Then sync each app in its own PR on that app's own rules (its
