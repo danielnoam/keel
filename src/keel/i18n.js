@@ -105,7 +105,7 @@
     function apply(el) {
       const top = el || document;
       for (const node of top.querySelectorAll("[data-t]")) {
-        const k = node.getAttribute("data-t") || node.textContent.trim();
+        const k = node.getAttribute("data-t") || node.textContent.trim().replace(/\s+/g, " ");
         node.setAttribute("data-t", k);
         node.textContent = t(k);
       }
