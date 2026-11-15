@@ -13,7 +13,9 @@
 //   i18n.apply(root)                     [data-t] text and [data-t-attr]
 //                                        attributes ("placeholder,title")
 //   i18n.lang, i18n.dir                  "he", "rtl"; also on <html>
-//   i18n.choice, i18n.set(code | "")     "" follows the device; set() saves
+//   i18n.choice, i18n.set(code | "")     "" follows the device (or English,
+//                                        with device: false while a table is
+//                                        still being written); set() saves
 //                                        and returns true when it changed,
 //                                        and the app reloads
 //   i18n.list()                          [{ code, name }], each in its own
@@ -42,7 +44,7 @@
     tables[lang] = Object.assign(tables[lang] || {}, table);
   }
 
-  function create({ key, langs = ["en"], fallback = "en", path = "src/lang/", version = "" } = {}) {
+  function create({ key, langs = ["en"], fallback = "en", path = "src/lang/", version = "", device: follow = true } = {}) {
     const store = (() => { try { return window.localStorage; } catch (e) { return null; } })();
     const read = () => { try { return (store && key && store.getItem(key)) || ""; } catch (e) { return ""; } };
     const choice = langs.includes(read()) ? read() : "";
@@ -52,7 +54,7 @@
       return fallback;
     };
     let saved = choice;
-    const lang = choice || device();
+    const lang = choice || (follow ? device() : fallback);
     const dir = dirOf(lang);
     const root = document.documentElement;
     root.lang = lang;

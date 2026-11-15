@@ -18,6 +18,8 @@
   device's language, or a saved one (`set(code)`, `""` to follow the
   device), `list()` for a picker, and `date`, `time`, `number`,
   `relative`, `join`, `region`, `language`, `compare` through `Intl`.
+  `device: false` ignores the device's language, for an app whose table
+  is still being written: only a language picked in its settings shows.
 - `tools/keel-checks.js` gets `i18n`: `keys(files)` reads the words the
   code and markup use, `table(file)` a language's table, `check(keys,
   table)` returns what's missing, stale, and broken (a `{name}` the

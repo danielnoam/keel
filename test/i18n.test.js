@@ -31,7 +31,7 @@ function el(attrs = {}, text = "") {
   };
 }
 
-function load({ languages = ["en-US"], saved, table = HE, fail = false, langs = ["en", "he"] } = {}) {
+function load({ languages = ["en-US"], saved, table = HE, fail = false, langs = ["en", "he"], device } = {}) {
   const items = saved ? { "app.lang": saved } : {};
   const added = [];
   const nodes = { "[data-t]": [], "[data-t-attr]": [] };
@@ -47,7 +47,7 @@ function load({ languages = ["en-US"], saved, table = HE, fail = false, langs = 
   };
   delete require.cache[FILE];
   require(FILE);
-  const i18n = window.Keel.i18n.create({ key: "app.lang", langs, version: "1.2.3" });
+  const i18n = window.Keel.i18n.create({ key: "app.lang", langs, version: "1.2.3", device });
   return { i18n, items, added, nodes, root: document.documentElement };
 }
 
@@ -75,6 +75,8 @@ function load({ languages = ["en-US"], saved, table = HE, fail = false, langs = 
   await test("a language the app doesn't have falls to English; the device's next choice counts", async () => {
     assert.strictEqual(load({ languages: ["fr-FR"] }).i18n.lang, "en");
     assert.strictEqual(load({ languages: ["fr-FR", "he"] }).i18n.lang, "he");
+    assert.strictEqual(load({ languages: ["he"], device: false }).i18n.lang, "en");
+    assert.strictEqual(load({ languages: ["en"], saved: "he", device: false }).i18n.lang, "he");
   });
 
   await test("Hebrew: fills names, numbers in its format, plural forms, context, English where missing", async () => {
