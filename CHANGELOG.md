@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.0] - 2026-11-15
+
+### Added
+- `tools/keel-checks.js`, for an app's tests (Node, never shipped):
+  `contrast.themes(css, { base, themes })` reads each theme's tokens from
+  the app's CSS (a base block, var() and rgba() over the ground handled),
+  and `contrast.check(themes, pairs)` names every pair under 4.5:1 (text)
+  or 3:1 ("ui"). A token or theme block that isn't there fails too.
+  `csp.check(html, files)` names what breaks a strict policy: no meta
+  tag, script-src not 'self', unsafe-inline or unsafe-eval, object-src or
+  base-uri missing, the tag after a link or script, inline scripts,
+  handlers, style attributes or javascript: links, and code that sets
+  style or on* attributes or uses eval. Each app keeps its own pairs.
+
 ## [0.5.0] - 2026-11-15
 
 ### Added
