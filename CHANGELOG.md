@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0] - 2026-11-15
+
+### Added
+- `src/keel/platform.js`, on `window.Keel.platform`: where the app runs.
+  `native`, `os`, `plugin(name)` for the phone apps (Capacitor),
+  `desktop`/`desktopOs` for the desktop app (Tauri), `bundled` for either,
+  `ready`/`build` for app-build.json, and links to other sites sent to the
+  device's browser (only http(s) and mailto leave), plus `deadline()`.
+  Apps load it before their own platform.js and build on it: Waypage's
+  and LifeLog's copies of this part were the same code twice.
+
 ## [0.6.0] - 2026-11-15
 
 ### Added
