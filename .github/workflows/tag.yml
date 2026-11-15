@@ -1,0 +1,27 @@
+# Tags each keel release: on a push to main, if keel.files.json's version
+# has no v<version> tag yet, this commit gets it. Apps sync by that tag
+# (node tools/keel-sync.js v<version>).
+name: Tag release
+on:
+  push:
+    branches: [main]
+    paths: ["keel.files.json", ".github/workflows/tag.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tag v<version> if it's new
+        run: |
+          V=$(node -p 'require("./keel.files.json").version')
+          if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+            echo "v$V is already tagged"; exit 0
+          fi
+          git tag "v$V" "$GITHUB_SHA"
+          git push origin "v$V"
+          echo "Tagged v$V"

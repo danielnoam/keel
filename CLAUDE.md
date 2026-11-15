@@ -14,7 +14,9 @@ README.md first.
 - Every change: `node test/run-all.js`, a line in CHANGELOG.md, the
   `version` in keel.files.json bumped (fix: patch, new file or option:
   minor, anything an app must change for: minor before 1.0, and say what
-  in CHANGELOG.md), and a `v<version>` tag after the merge.
+  in CHANGELOG.md). The merge tags `v<version>` by itself
+  (`.github/workflows/tag.yml`); a session can't push tags. A change to
+  a file outside keel.files.json (CI, docs) needs no bump.
 - A file added to or removed from keel is added to or removed from
   keel.files.json and README.md's table in the same change.
 - Then sync each app in its own PR on that app's own rules (its
