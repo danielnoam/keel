@@ -45,5 +45,5 @@ An app expects `tools/build-www.js` to export `appVersion()` (used by
 ## Changing a shared file
 
 Never in the app: its tests fail. Change it here, add a line to
-CHANGELOG.md, bump `version` in keel.files.json, tag `v<version>`, then
-sync each app in its own PR.
+CHANGELOG.md, bump `version` in keel.files.json and merge: the merge
+tags `v<version>` (tag.yml). Then sync each app in its own PR.
