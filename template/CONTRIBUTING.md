@@ -36,7 +36,9 @@ desktop width.
 
 **Design.** Colours are tokens in `src/styles.css`, every theme passes
 WCAG AA (`test/contrast.test.js`), touch targets are 44 px, and every
-animation has a reduced-motion answer.
+animation has a reduced-motion answer. Moves go through keel's motion
+(`__APPNS__.motion`), which turns each into a short fade under reduced
+motion; a CSS transition uses its `--spring-*` variables.
 
 **Ask first for big things.** A new look, a reworked screen or a big
 change is shown or explained to Daniel first and waits for his OK.
