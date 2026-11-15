@@ -89,8 +89,10 @@
       }
     }
     async function ok(r) {
-      if (!r.ok) throw httpError(r.status, await r.text(), r);
-      return r;
+      if (r.ok) return r;
+      let text = "";
+      try { text = await r.text(); } catch (e) { try { text = JSON.stringify(await r.json()); } catch (e2) { /* no body */ } }
+      throw httpError(r.status, text, r);
     }
     // JSON from anywhere under the repo (`rest` like "git/trees"), null for
     // a GET that's 404.
@@ -127,7 +129,13 @@
       if (res.status === 404) return null;
       const j = await (await ok(res)).json();
       const b64 = j.content ? j.content : j.size ? await blob(j.sha) : "";
-      return { text: b64 ? b64decode(b64) : "", sha: j.sha, etag: res.headers.get("ETag") || "" };
+      return { text: b64 ? b64decode(b64) : "", sha: j.sha, etag: (res.headers && res.headers.get && res.headers.get("ETag")) || "" };
+    }
+    // Just the file's sha (no bytes, no blob past 1 MB), or null.
+    async function shaOf(path, { ref: r } = {}) {
+      const res = await request(contents(path) + ref(r), { accept: "application/vnd.github.object+json" });
+      if (res.status === 404) return null;
+      return (await (await ok(res)).json()).sha;
     }
     // { data, sha } or null; an empty file is null too.
     async function getJson(path, opts) {
@@ -136,12 +144,13 @@
       if (!f.text) return null;
       return { data: JSON.parse(f.text), sha: f.sha, etag: f.etag };
     }
-    // The raw file, as text or bytes; null when there's none.
-    async function getRaw(path, { ref: r, bytes = false } = {}) {
+    // The raw file, `as` "text", "bytes" (a Uint8Array) or "blob"; null
+    // when there's none.
+    async function getRaw(path, { ref: r, as = "text" } = {}) {
       const res = await request(contents(path) + ref(r), { accept: "application/vnd.github.raw" });
       if (res.status === 404) return null;
       await ok(res);
-      return bytes ? new Uint8Array(await res.arrayBuffer()) : res.text();
+      return as === "bytes" ? new Uint8Array(await res.arrayBuffer()) : as === "blob" ? res.blob() : res.text();
     }
     // The file's sha without its bytes (from a listing of its folder), or
     // undefined when that didn't answer.
@@ -177,11 +186,11 @@
         if (!conflict(e)) throw e;
       }
       for (let n = 1; ; n++) {
-        const cur = await getFile(path);
+        const cur = onConflict ? await getFile(path) : { sha: await shaOf(path) };
         const next = onConflict ? await onConflict(cur) : (bytes ? { bytes } : { text });
         const out = typeof next === "string" ? { text: next } : next;
         try {
-          return { sha: await putFile(path, { ...out, sha: cur ? cur.sha : null, message }), conflicted: true };
+          return { sha: await putFile(path, { ...out, sha: (cur && cur.sha) || null, message }), conflicted: true };
         } catch (e) {
           if (!conflict(e) || n >= tries) throw e;
         }
@@ -199,8 +208,9 @@
     // One commit of many files on `branch` (the repo's by default): each of
     // `files` is { path, text } or { path, sha } (sha null removes it). A
     // branch that moved meanwhile gets the tree remade on its new head. A
-    // missing branch is an error, or, with `root` (more { path, sha }
-    // entries), is started as a commit of root + files with no parent.
+    // missing branch is an error, or, with `root` (a function giving more
+    // { path, sha } entries, asked only then), is started as a commit of
+    // root + files with no parent.
     // `beforeTry` runs before each try (to stop a sync someone paused).
     async function commitFiles(files, message, { branch = c().branch, root, beforeTry, tries = 4 } = {}) {
       const tree = files.map((f) => (f.text != null ? { path: f.path, mode: "100644", type: "blob", content: f.text }
@@ -211,7 +221,7 @@
         if (!head && !root) throw httpError(404, "no branch " + branch);
         try {
           if (!head) {
-            const made = await json("POST", "git/trees", { tree: root.map((f) => ({ path: f.path, mode: "100644", type: "blob", sha: f.sha })).concat(tree) });
+            const made = await json("POST", "git/trees", { tree: (await root()).map((f) => ({ path: f.path, mode: "100644", type: "blob", sha: f.sha })).concat(tree) });
             const commit = await json("POST", "git/commits", { message, tree: made.sha, parents: [] });
             await json("POST", "git/refs", { ref: "refs/heads/" + branch, sha: commit.sha });
             return commit.sha;
@@ -239,7 +249,7 @@
     }
 
     return {
-      request, json, me, repoInfo, createRepo, getFile, getJson, getRaw, peekSha,
+      request, json, me, repoInfo, createRepo, getFile, getJson, getRaw, shaOf, peekSha,
       putFile, saveFile, removeFile, createBlob, commitFiles, listCommits, blob,
     };
   }

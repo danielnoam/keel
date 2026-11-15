@@ -156,6 +156,8 @@ test("saveFile without onConflict writes over the newer copy", async () => {
   const r = await gh.saveFile("a.txt", { text: "mine", sha: null });
   assert.strictEqual(r.conflicted, true);
   assert.strictEqual(await gh.getRaw("a.txt"), "mine");
+  assert.strictEqual(await gh.shaOf("a.txt"), r.sha);
+  assert.strictEqual(await gh.shaOf("none.txt"), null);
 });
 
 test("removeFile doesn't mind a file already gone", async () => {
@@ -164,6 +166,12 @@ test("removeFile doesn't mind a file already gone", async () => {
   await gh.removeFile("a.txt", s);
   await gh.removeFile("a.txt", s);
   assert.strictEqual(await gh.getRaw("a.txt"), null);
+});
+
+test("getRaw gives bytes when asked", async () => {
+  const { f, gh } = setup();
+  f.put("p.bin", "AB");
+  assert.deepStrictEqual([...(await gh.getRaw("p.bin", { as: "bytes" }))], [65, 66]);
 });
 
 test("commitFiles makes one commit, and remakes it when the branch moved", async () => {
@@ -179,10 +187,13 @@ test("commitFiles makes one commit, and remakes it when the branch moved", async
 
 test("commitFiles starts a missing branch from root, and refuses without it", async () => {
   const { f, gh } = setup();
-  const readme = await gh.createBlob("hi");
-  await gh.commitFiles([{ path: "images/a", sha: await gh.createBlob("img") }], "Add", { branch: "pics", root: [{ path: "README.md", sha: readme }] });
+  let asked = 0;
+  const root = async () => { asked++; return [{ path: "README.md", sha: await gh.createBlob("hi") }]; };
+  await gh.commitFiles([{ path: "images/a", sha: await gh.createBlob("img") }], "Add", { branch: "pics", root });
+  await gh.commitFiles([{ path: "images/b", sha: await gh.createBlob("img2") }], "Add", { branch: "pics", root });
+  assert.strictEqual(asked, 1);
   assert.ok(f.raw.refs.pics);
-  assert.deepStrictEqual(Object.keys(f.raw.trees[f.raw.commits[f.raw.refs.pics].tree]).sort(), ["README.md", "images/a"]);
+  assert.deepStrictEqual(Object.keys(f.raw.trees[f.raw.commits[f.raw.refs.pics].tree]).sort(), ["README.md", "images/a", "images/b"]);
   await assert.rejects(gh.commitFiles([{ path: "x", text: "x" }], "m", { branch: "none" }), (e) => e.status === 404);
 });
 
