@@ -2,7 +2,30 @@
 
 ## Unreleased
 
+## [0.9.0] - 2026-11-15
+
 ### Added
+- `src/keel/i18n.js`, on `window.Keel.i18n`: `create({ key, langs,
+  fallback, path, version })` gives an app its words in the reader's
+  language. The English in `t("...")` is the key and shows until a
+  language's table (`src/lang/<code>.js`, `Keel.i18n.strings(code,
+  {...})`, loaded only when needed) has it. `{name}` filling with numbers
+  in the language's format, `tn(n, one, other)` with the language's
+  plural forms (Hebrew's one/two/other), a context for one English word
+  with two meanings (`t("Open", { _: "state" })`), `apply(root)` for
+  `data-t` and `data-t-attr` markup. `<html>` gets `lang` and `dir`
+  (rtl for Hebrew, Arabic and the rest) before the first paint. The
+  device's language, or a saved one (`set(code)`, `""` to follow the
+  device), `list()` for a picker, and `date`, `time`, `number`,
+  `relative`, `join`, `region`, `language`, `compare` through `Intl`.
+- `tools/keel-checks.js` gets `i18n`: `keys(files)` reads the words the
+  code and markup use, `table(file)` a language's table, `check(keys,
+  table)` returns what's missing, stale, and broken (a `{name}` the
+  English lacks, a plural with no `other`).
+- The template loads it, in English and Hebrew: `src/lang/he.js` and
+  `test/i18n.test.js`. An app syncing 0.9.0 needs nothing changed until
+  it loads `i18n.js`.
+
 - The template's native side, shaped like LifeLog (phone and desktop):
   Capacitor 8 for Android and iOS, Tauri 2 for Windows and Linux, the
   build tools and the workflows (Android release, Desktop, iOS by hand,
