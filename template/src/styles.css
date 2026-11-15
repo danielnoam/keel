@@ -1,0 +1,50 @@
+/* __NAME__'s styles. Colours are tokens, set per theme here and nowhere
+   else; test/contrast.test.js checks every theme's pairs. */
+:root {
+  --bg: #F6F5F2;
+  --surface: #FFFFFF;
+  --text: #1E1F1C;
+  --text-dim: #5C5F58;
+  --accent: #2F5D50;
+  --line: #8A8D85;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --radius: 12px;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #141513;
+  --surface: #1E201D;
+  --text: #ECEDE8;
+  --text-dim: #A9ACA3;
+  --accent: #8FC3B2;
+  --line: #74786F;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + var(--space-4)) var(--space-3) var(--space-4);
+}
+h1 { margin: 0 0 var(--space-2); font-size: 28px; line-height: 1.2; }
+.dim { color: var(--text-dim); margin: 0; }
+.update {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

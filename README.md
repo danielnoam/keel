@@ -48,6 +48,32 @@ An app expects `tools/build-www.js` to export `appVersion()` (used by
 `android-version.js`), `APP_VERSION` in `src/app.js`, and
 `const CACHE = "<app>-v<n>"` in `sw.js`.
 
+## Starting a new app
+
+```sh
+node tools/keel-new.js "Trail Notes" ../trail-notes
+```
+
+writes `template/` into the folder with the app's name in it (title,
+`trail-notes` for caches and keys, `TrailNotes` for its global and its
+release assets), then brings in keel's shared files as a sync would, lock
+and all. What comes out is the web base every kind of app needs:
+
+- `index.html` with a strict Content-Security-Policy, `manifest.json`, `icon.svg`
+- `sw.js`: offline for the web copy, and test builds through `sw-preview.js`
+- `src/app.js` (APP_VERSION, the theme, the update check) and `src/styles.css` (tokens per theme)
+- tests: the CSP and contrast checks, index.html against sw.js's ASSETS and the
+  version places, keel's files unedited
+- CLAUDE.md, CONTRIBUTING.md, ARCHITECTURE.md, README.md, CHANGELOG.md,
+  DROPPED.md, `changes/`, and the Tests workflow
+
+The native side (Capacitor, the Android and iOS workflows, Tauri) isn't in
+it yet: it goes in when the first app that needs it is made from the
+template. `template/` and `tools/keel-new.js` stay in keel: they are never
+synced into an app, and an app made from them is its own from then on.
+`test/template.test.js` makes an app and runs its tests and its first
+release.
+
 ## Changing a shared file
 
 Never in the app: its tests fail. Change it here, add a line to

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `tools/keel-new.js "<Name>" <folder>` and `template/`: a new app's web
+  base (strict CSP, service worker with test builds, update check, theme
+  tokens, the CSP and contrast tests, the docs, the Tests workflow), with
+  keel's files synced in. Kept in keel only, so no version bump.
+
 ## [0.7.0] - 2026-11-15
 
 ### Added
