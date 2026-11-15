@@ -52,7 +52,7 @@ self.KeelPreview = (function () {
       if (rel !== "index.html") return res;
       const name = p.title || (p.pr ? "#" + p.pr : "a branch");
       const bar = '<link rel="stylesheet" href="./' + BAR_CSS_FILE + '" /><a class="keel-preview-bar" href="./?release">Test build: ' + escHtml(name) + " · Back to the release</a>";
-      return new Response((await res.text()).replace(/<\/body>/i, bar + "</body>"), { headers: { "Content-Type": "text/html" } });
+      return new Response((await res.text()).replace(/<\/body>/i, bar + "</body>"), { headers: { "Content-Type": "text/html; charset=utf-8" } });
     }
 
     // The answer to a same-origin GET: the test build's file while one is
