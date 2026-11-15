@@ -1,0 +1,48 @@
+# keel
+
+The shared layer under Daniel's no-build apps (Waypage, LifeLog, and the
+next ones): the files that were being copied between them by hand, kept
+in one place.
+
+Each app pulls keel's files in as **plain committed files**, pinned to a
+release. Nothing is a submodule or a package, so the web copy still
+serves straight from the repo and the native builds need no extra step.
+
+## What's in it
+
+| File | What it does |
+| --- | --- |
+| `server.js` | Local static server: this computer only, its own folder only |
+| `src/keel/qr.js` | QR encoder for a sync setup link, on `window.Keel.qr` |
+| `tools/release.js` | `node tools/release.js x.y.z`: bumps APP_VERSION, `?v=` tags and the sw.js cache, folds `changes/*.md` into CHANGELOG.md |
+| `tools/android-version.js` | Stamps APP_VERSION into the Android project's versionCode |
+| `tools/keel-sync.js` | Pulls a keel release into an app and checks it |
+| `test/keel.test.js` | Fails an app's tests if a keel file was edited there |
+| `.claude/skills/github-pages` | The GitHub Pages skill |
+
+`keel.files.json` is that list, with keel's version.
+
+## Using it in an app
+
+1. Add `keel.config.json` at the app's root:
+
+   ```json
+   { "name": "LifeLog" }
+   ```
+
+2. Copy `tools/keel-sync.js` in once, then run
+   `node tools/keel-sync.js v0.1.0`. It writes the files and
+   `keel.lock.json` (the release and a hash per file).
+3. Commit. From then on `test/keel.test.js` runs with the app's tests.
+
+To update: `node tools/keel-sync.js v0.2.0`, look at the diff, commit.
+
+An app expects `tools/build-www.js` to export `appVersion()` (used by
+`android-version.js`), `APP_VERSION` in `src/app.js`, and
+`const CACHE = "<app>-v<n>"` in `sw.js`.
+
+## Changing a shared file
+
+Never in the app: its tests fail. Change it here, add a line to
+CHANGELOG.md, bump `version` in keel.files.json, tag `v<version>`, then
+sync each app in its own PR.

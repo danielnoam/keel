@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "files": [
+    "server.js",
+    "src/keel/qr.js",
+    "tools/release.js",
+    "tools/android-version.js",
+    "tools/keel-sync.js",
+    "test/keel.test.js",
+    ".claude/skills/github-pages/SKILL.md"
+  ]
+}

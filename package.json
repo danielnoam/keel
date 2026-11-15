@@ -1,0 +1,8 @@
+{
+  "name": "keel",
+  "private": true,
+  "description": "Shared files for Daniel's no-build apps. No dependencies.",
+  "scripts": {
+    "test": "node test/run-all.js"
+  }
+}
