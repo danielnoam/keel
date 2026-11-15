@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0] - 2026-11-15
+
+### Added
+- `src/keel/releases.js`, on `window.Keel.releases`: `create({ name,
+  repo, fetchText })` gives `latest()` (the newest app-v release, for the
+  update check), `list()` (the test builds, from the pre-releases'
+  notes and assets), and in a browser `running`, `webReady`, `open(p)`
+  and `back()`. Plus `newer`, `notesOf`, `parse`, `webRepo`. No token is
+  sent. The update bar, the Test builds screen and the APK download stay
+  in each app.
+- `src/keel/sw-preview.js`, on the service worker's `self.KeelPreview`:
+  the browser test build's files from its commit, kept for offline, a
+  file the commit lacks from the release, and the Back to the release
+  bar styled from a served stylesheet (inside the page's CSP). sw.js
+  loads it with `importScripts` and calls `respond(e, fromRelease)`.
+
 ## [0.4.0] - 2026-11-15
 
 ### Added
