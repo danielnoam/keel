@@ -18,6 +18,12 @@ comes back.
 
 - **No build step, no dependencies.** Plain files, served as they are.
   Anything vendored goes under `src/vendor/` with its licence beside it.
+  `package.json` is only the native builds' tools (Capacitor, Tauri); the
+  app never loads anything from it.
+- **One set of files everywhere.** The web app, the phone apps and the
+  desktop app are the same files: `tools/build-www.js` copies sw.js's
+  ASSETS into `www/` (phones) or `www-desktop/` (desktop). What differs
+  by platform is decided in keel's platform.js, never sniffed elsewhere.
 - **Shared files come from keel.** `src/keel/`, `server.js` and the
   `tools/` keel lists are never edited here (`test/keel.test.js` fails if
   they are).
@@ -31,8 +37,10 @@ and any trade-off is said plainly and written in ARCHITECTURE.md's
 Trade-offs. The page's Content-Security-Policy stays strict
 (`test/csp.test.js`): no inline script, handler or style attribute.
 
-**Every platform.** It works on a phone and on a computer, at phone and
-desktop width.
+**Every platform.** It works in a browser, in the phone apps and in the
+desktop app, at phone and desktop width. A native plugin or permission is
+added in `package.json` and `tools/android-manifest.js` /
+`tools/ios-project.js` / `src-tauri/`, with its reason beside it.
 
 **Design.** Colours are tokens in `src/styles.css`, every theme passes
 WCAG AA (`test/contrast.test.js`), touch targets are 44 px, and every
@@ -58,4 +66,11 @@ change is shown or explained to Daniel first and waits for his OK.
   `node tools/release.js x.y.z` changes APP_VERSION in `src/app.js`, every
   `?v=` in `index.html` and `CACHE` in `sw.js`, and folds `changes/` into
   CHANGELOG.md. New feature: minor; fix: patch.
-- The web copy is GitHub Pages from `main`: every merge updates it.
+- The web copy is GitHub Pages from `main` (`pages.yml`, after the
+  tests): every merge updates it.
+- A merge with a new version publishes the release `app-v<version>`:
+  the APK (`android.yml`), then the Windows app (`desktop.yml`) beside
+  it. iOS (`ios.yml`) and Linux build only when run by hand.
+- A pull request labelled `test` (or `test-android`, `test-ios`,
+  `test-desktop`, `test-linux`) gets a test build on the pre-release
+  `test-<branch>`; the label coming off or the PR closing removes it.

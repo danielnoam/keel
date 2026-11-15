@@ -1,0 +1,104 @@
+# Builds a new app made from template/ for real: the APK, the Windows and
+# Linux app, and the iOS app, the way the app's own workflows do. Unit tests
+# can't tell whether Capacitor, Gradle, Xcode or Tauri accept what the
+# template hands them; this can. Runs on a pull request that touches the
+# template or keel-new.js, and by hand. Nothing is signed for real or
+# published: the APK gets a throwaway key, the IPA is unsigned.
+name: Template native builds
+
+on:
+  pull_request:
+    paths: ["template/**", "tools/keel-new.js", "tools/android-version.js", ".github/workflows/template-native.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: template-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Make an app
+        run: node tools/keel-new.js "Keel Check" "$RUNNER_TEMP/app"
+      - name: Build the APK as android.yml does
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          npm ci
+          node test/run-all.js
+          node tools/build-www.js
+          npx cap add android
+          node tools/android-manifest.js
+          npx --yes @capacitor/assets@3 generate --android --iconBackgroundColor '#F6F5F2' --iconBackgroundColorDark '#F6F5F2' --splashBackgroundColor '#F6F5F2' --splashBackgroundColorDark '#F6F5F2'
+          node tools/android-version.js
+          npx cap sync android
+          (cd android && ./gradlew assembleRelease --no-daemon)
+      - name: Sign with a throwaway key
+        working-directory: ${{ runner.temp }}/app
+        run: bash tools/sign-apk.sh && ls -lh KeelCheck.apk
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, name: windows, bundles: nsis }
+          - { os: ubuntu-22.04, name: linux, bundles: "appimage,deb" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+      - name: Make an app
+        shell: bash
+        run: node tools/keel-new.js "Keel Check" "$RUNNER_TEMP/app"
+      - name: Build as desktop.yml does
+        shell: bash
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          npm ci
+          npx tauri icon icon.svg
+          V="$(node -p "require('./tools/build-www').appVersion()")"
+          npx tauri build --ci --bundles ${{ matrix.bundles }} --config "{\"version\":\"$V\"}"
+          node tools/desktop-files.js ${{ matrix.name }} out
+          ls -lh out
+
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Make an app
+        run: node tools/keel-new.js "Keel Check" "$RUNNER_TEMP/app"
+      - name: Build as ios.yml does
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          npm ci
+          node tools/build-www.js
+          npx cap add ios --packagemanager CocoaPods
+          node tools/ios-project.js
+          npx --yes @capacitor/assets@3 generate --ios --iconBackgroundColor '#F6F5F2' --iconBackgroundColorDark '#F6F5F2' --splashBackgroundColor '#F6F5F2' --splashBackgroundColorDark '#F6F5F2'
+          npx cap sync ios
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tail -40
+          test -d build/Build/Products/Release-iphoneos/App.app

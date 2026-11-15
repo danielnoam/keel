@@ -1,5 +1,6 @@
 # The test suite on every pull request and push to main: "Tests" is the
-# check main requires before a merge.
+# check main requires before a merge. The native and Pages workflows call
+# it too, so nothing is built or deployed from a red commit.
 name: Tests
 
 on:
@@ -7,6 +8,7 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

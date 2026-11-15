@@ -52,28 +52,39 @@ An app expects `tools/build-www.js` to export `appVersion()` (used by
 ## Starting a new app
 
 ```sh
-node tools/keel-new.js "Trail Notes" ../trail-notes
+node tools/keel-new.js "Trail Notes" ../trail-notes [--owner danielnoam]
 ```
 
 writes `template/` into the folder with the app's name in it (title,
 `trail-notes` for caches and keys, `TrailNotes` for its global and its
-release assets), then brings in keel's shared files as a sync would, lock
-and all. What comes out is the web base every kind of app needs:
+release assets, `io.github.<owner>.trailnotes` for the phone and desktop
+app id), then brings in keel's shared files as a sync would, lock and all.
+What comes out is an app on the web, Android and iOS (Capacitor), and
+Windows and Linux (Tauri), shaped like LifeLog:
 
 - `index.html` with a strict Content-Security-Policy, `manifest.json`, `icon.svg`
 - `sw.js`: offline for the web copy, and test builds through `sw-preview.js`
-- `src/app.js` (APP_VERSION, the theme, the update check) and `src/styles.css` (tokens per theme)
+- `src/app.js` (APP_VERSION, the theme, the update check, motion) and `src/styles.css` (tokens per theme)
 - tests: the CSP and contrast checks, index.html against sw.js's ASSETS and the
   version places, keel's files unedited
-- CLAUDE.md, CONTRIBUTING.md, ARCHITECTURE.md, README.md, CHANGELOG.md,
-  DROPPED.md, `changes/`, and the Tests workflow
+- CLAUDE.md, CONTRIBUTING.md, ARCHITECTURE.md, README.md (with the
+  one-time setup: Pages source, the Android key, the desktop updater key,
+  the test labels), CHANGELOG.md, DROPPED.md, `changes/`
+- the native side: `package.json` and its lock (Capacitor 8, Tauri 2),
+  `capacitor.config.json`, `src-tauri/` (one window, single instance,
+  updater), `assets/logo.svg`, and the tools the builds run
+  (`build-www.js`, `android-manifest.js`, `ios-project.js`, `sign-apk.sh`,
+  `test-build.sh`, `desktop-files.js`)
+- the workflows: Tests, Pages after the tests, Android (the release),
+  Desktop (Windows, Linux by hand), iOS (by hand), and test builds by
+  pull request label
 
-The native side (Capacitor, the Android and iOS workflows, Tauri) isn't in
-it yet: it goes in when the first app that needs it is made from the
-template. `template/` and `tools/keel-new.js` stay in keel: they are never
-synced into an app, and an app made from them is its own from then on.
-`test/template.test.js` makes an app and runs its tests and its first
-release.
+`template/` and `tools/keel-new.js` stay in keel: they are never synced
+into an app, and an app made from them is its own from then on.
+`test/template.test.js` makes an app and runs its tests, its build tools
+and its first release; `.github/workflows/template-native.yml` builds that
+app's APK, Windows and Linux app and iOS app for real on any pull request
+that touches the template.
 
 ## Changing a shared file
 

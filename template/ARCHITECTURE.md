@@ -23,8 +23,21 @@ test/csp.test.js     the policy and the code under it (keel's check)
 test/contrast.test.js  every theme's colour pairs pass WCAG AA (keel's check)
 test/keel.test.js    keel's files weren't edited here (from keel)
 server.js            the local server: this computer only (from keel)
-tools/               release.js, keel-sync.js, keel-checks.js and the rest (from keel)
+tools/               release.js, keel-sync.js, keel-checks.js, android-version.js (from keel)
+tools/build-www.js   copies sw.js's ASSETS into www/ (phones) or www-desktop/ (desktop), with app-build.json
+tools/android-manifest.js  what the app adds to Capacitor's AndroidManifest.xml
+tools/ios-project.js the iOS project's Info.plist keys and version
+tools/sign-apk.sh    signs the APK with the release key, or a throwaway one
+tools/test-build.sh  a pull request's build on the test-<branch> pre-release
+tools/desktop-files.js  the desktop files under fixed names, and the updater's latest.json
+package.json         the native builds' tools only (Capacitor, Tauri)
+capacitor.config.json  the phone apps: id, name, colours
+src-tauri/           the desktop app: one window on the same files, single instance, updater
+assets/logo.svg      the phone apps' icon and splash (@capacitor/assets)
+.github/workflows/   tests, Pages, android, ios, desktop, test-builds
 ```
+
+android/, ios/, www/ and www-desktop/ are made in CI, never committed.
 
 The files listed in `keel.lock.json` come from keel and are never edited
 here: fix them in keel, release it, then `node tools/keel-sync.js v<x.y.z>`.

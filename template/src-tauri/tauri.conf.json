@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "__NAME__",
+  "identifier": "__APPID__",
+  "version": "0.0.0",
+  "build": {
+    "frontendDist": "../www-desktop",
+    "beforeBuildCommand": "node tools/build-www.js www-desktop --desktop"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "__NAME__",
+        "width": 1280,
+        "height": 840,
+        "minWidth": 360,
+        "minHeight": 560,
+        "backgroundColor": "#F6F5F2",
+        "dragDropEnabled": false,
+        "zoomHotkeysEnabled": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "appimage", "deb"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico", "icons/icon.png"],
+    "category": "Productivity",
+    "shortDescription": "__NAME__",
+    "homepage": "https://github.com/__OWNER__/__SLUG__",
+    "createUpdaterArtifacts": false,
+    "windows": {
+      "nsis": { "installMode": "currentUser" }
+    },
+    "linux": {
+      "deb": { "depends": [] }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/__OWNER__/__SLUG__/releases/latest/download/latest.json"],
+      "pubkey": "",
+      "windows": { "installMode": "passive" }
+    }
+  }
+}

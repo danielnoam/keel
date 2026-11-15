@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What __NAME__'s own page may ask of the system. Nothing else loads in the window: links out open in the browser.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:allow-open-url",
+    "updater:default",
+    "process:allow-restart"
+  ]
+}
