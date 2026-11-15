@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0] - 2026-11-15
+
+### Added
+- `src/keel/drive.js`, on `window.Keel.drive`: Google Drive backups,
+  from Waypage's drive.js with LifeLog's computer sign-in (loopback with
+  PKCE and a refresh token). `create({ name, tag, keys, webClient,
+  desktopClient, desktopSecret, mime, native, desktop, plugin, tauri,
+  openOutside, fileBlob, fresh })` gives `connect`, `disconnect`,
+  `getToken`, `list`, `upload` ({ uri } through the Android plugin,
+  { blob } or { text } in resumable pieces), `download` (a Blob),
+  `remove`, the newest three kept (and one a week old with backups more
+  often than weekly), and the settings (`auto`, `every`, `last`, `since`,
+  `due`, `get`/`set` for the app's own). What goes in a backup and when
+  it runs stay in each app. Apps load it before their own drive code.
+
 ## [0.2.0] - 2026-11-15
 
 ### Added

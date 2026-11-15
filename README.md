@@ -15,6 +15,7 @@ serves straight from the repo and the native builds need no extra step.
 | `server.js` | Local static server: this computer only, its own folder only |
 | `src/keel/qr.js` | QR encoder for a sync setup link, on `window.Keel.qr` |
 | `src/keel/github.js` | The GitHub calls a sync makes, on `window.Keel.github`: read a file (blob past 1 MB, ETag), write with a stale-sha merge hook, many files in one commit, errors with a `kind`. Each app keeps its own merge |
+| `src/keel/drive.js` | Google Drive backups, on `window.Keel.drive.create(...)`: sign-in (Android plugin, browser window, computer loopback), the app's folder, resumable uploads, keep the newest three, list, restore, delete. Each app makes the backup itself |
 | `tools/release.js` | `node tools/release.js x.y.z`: bumps APP_VERSION, `?v=` tags and the sw.js cache, folds `changes/*.md` into CHANGELOG.md |
 | `tools/android-version.js` | Stamps APP_VERSION into the Android project's versionCode |
 | `tools/keel-sync.js` | Pulls a keel release into an app and checks it |
