@@ -1,11 +1,12 @@
 {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "files": [
     "server.js",
     "src/keel/qr.js",
     "src/keel/github.js",
     "src/keel/drive.js",
     "src/keel/errlog.js",
+    "src/keel/platform.js",
     "src/keel/releases.js",
     "src/keel/sw-preview.js",
     "tools/release.js",
