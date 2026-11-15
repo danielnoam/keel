@@ -1,8 +1,20 @@
 # Changelog
 
-## Unreleased
+## [0.8.0] - 2026-11-15
 
 ### Added
+- `src/keel/motion.js`, on `window.Keel.motion`: `create({ touch,
+  desktop, desktopQuery, reducedMs, cssPrefix })` makes an app's motion
+  engine from its own springs (`[stiffness, damping]`, damping may be
+  `"critical"`; `desktop: null` for no desktop tier). Waypage's engine,
+  moved here: push/pop, grow/shrink, rise/sink/settle, dim, the sidebar
+  slides, popFrom/popInto/popOut, dialogIn/Out, edgeIn/Out, morph,
+  appear/vanish, measure/flip/ghostOut, page turns, `busy()`,
+  `setStill()` for Animations off, and the springs as CSS variables.
+  New: `press(selector, { skip })`, LifeLog's press feedback (a dip by
+  pixels, back on the control spring). `spring(k, c)` and `edge(s)` are
+  exported for one-off curves. Nothing passed gets Waypage's springs.
+- The template loads it and makes `__APPNS__.motion` with the defaults.
 - `tools/keel-new.js "<Name>" <folder>` and `template/`: a new app's web
   base (strict CSP, service worker with test builds, update check, theme
   tokens, the CSP and contrast tests, the docs, the Tests workflow), with

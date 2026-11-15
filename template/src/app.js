@@ -1,5 +1,6 @@
 // __NAME__: the app. keel's files (src/keel/) load before it: errlog.js
-// first, then platform.js (where it runs) and releases.js (updates).
+// first, then platform.js (where it runs), releases.js (updates) and
+// motion.js (springs and moves).
 (function () {
   const APP_VERSION = "0.1.0";
   const K = window.Keel;
@@ -32,5 +33,10 @@
     }).catch(() => { /* offline: ask again next launch */ });
   }
 
-  window.__APPNS__ = { version: APP_VERSION, releases };
+  // Motion: keel's moves on this app's springs. Pass touch and desktop
+  // springs to create() to give the app its own feel; DESIGN.md (once
+  // there is one) says which moves it uses.
+  const motion = K.motion.create();
+
+  window.__APPNS__ = { version: APP_VERSION, releases, motion };
 })();
