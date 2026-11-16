@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [0.10.0] - 2026-11-16
+
+### Changed
+- `src/keel/motion.js`: sideways moves follow the page's direction
+  (`<html dir>`, read at each move). Right to left, a pushed screen comes
+  in from the left and the one under it drifts right; a sidebar slides
+  in from the right edge and what's under it drifts left; the next page
+  comes in from the left. `from` (where a drag left something) stays in
+  screen pixels. `fromPast` and `ghostOut` take `start` and `end` sides.
+  New `rtl()` and `x(n)` (n, negated right to left) for an app's own
+  drag code.
+- **Apps must change**: right to left, the sidebar now animates from the
+  right, so its CSS must sit at the inline start (`inset-inline-start: 0`,
+  not `left: 0`), and edge swipes and drag directions in the app's own
+  code must mirror (`M.x()`). Left to right nothing changes.
+
 ## [0.9.0] - 2026-11-15
 
 ### Added
