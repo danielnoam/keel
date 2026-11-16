@@ -161,5 +161,44 @@ function el(r = { left: 0, top: 0, right: 100, bottom: 50, width: 100, height: 5
     assert.strictEqual(listeners.pointerdown.length, 0);
   });
 
+  await test("right to left: screens, sidebars, pages and edges mirror; drags stay in screen px", async () => {
+    const { Keel, root } = load();
+    const M = Keel.create();
+    const tx = (a, i) => a.frames[i].transform;
+    root.dir = "rtl";
+    assert.strictEqual(M.rtl(), true);
+    assert.strictEqual(M.x(10), -10);
+    const s = el(), u = el();
+    await M.push(s, u);
+    assert.strictEqual(tx(s.calls[0], 0), "translateX(-100%)");
+    assert.strictEqual(tx(u.calls[0], 1), "translateX(25%)");
+    await M.pop(s, u, -30);
+    assert.strictEqual(tx(s.calls[1], 0), "translateX(-30px)");
+    assert.strictEqual(tx(s.calls[1], 1), "translateX(-100%)");
+    const side = el({ left: 300, top: 0, right: 400, bottom: 800, width: 100, height: 800 }), under = el();
+    await M.slideIn(side, under);
+    assert.strictEqual(tx(side.calls[0], 0), "translateX(100%)");
+    assert.strictEqual(tx(under.calls[0], 1), "translateX(-20px)");
+    await M.slideOut(side, 50, under);
+    assert.strictEqual(tx(side.calls[1], 1), "translateX(100%)");
+    assert.strictEqual(tx(under.calls[1], 0), "translateX(-10px)", "half dragged: half the drift");
+    const pg = el();
+    await M.pageIn(pg);
+    assert.strictEqual(tx(pg.calls[0], 0), "translateX(-100%)");
+    await M.pageOut(pg);
+    assert.strictEqual(tx(pg.calls[1], 1), "translateX(100%)");
+    await M.pageIn(pg, false);
+    assert.strictEqual(tx(pg.calls[2], 0), "translateY(100%)", "up from the bottom doesn't mirror");
+    const r = { left: 10, top: 10, right: 110, bottom: 60, width: 100, height: 50 };
+    assert.strictEqual(M.fromPast(r, "start"), M.fromPast(r, "right"));
+    assert.strictEqual(M.fromPast(r, "end"), M.fromPast(r, "left"));
+    root.dir = "";
+    assert.strictEqual(M.fromPast(r, "start"), M.fromPast(r, "left"));
+    const l = el();
+    await M.push(l);
+    assert.strictEqual(tx(l.calls[0], 0), "translateX(100%)", "left to right as before");
+    assert.strictEqual(M.sideDrift(side), "translateX(20px)");
+  });
+
   console.log(passed + " passed");
 })();
