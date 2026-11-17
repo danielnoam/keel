@@ -25,7 +25,8 @@ serves straight from the repo and the native builds need no extra step.
 | `tools/release.js` | `node tools/release.js x.y.z`: bumps APP_VERSION, `?v=` tags and the sw.js cache, folds `changes/*.md` into CHANGELOG.md |
 | `tools/android-version.js` | Stamps APP_VERSION into the Android project's versionCode |
 | `tools/keel-sync.js` | Pulls a keel release into an app and checks it |
-| `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, its Content-Security-Policy and the code under it, and each language's table against the words the code uses (missing, stale, broken `{name}`) |
+| `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, its Content-Security-Policy and the code under it, each language's table against the words the code uses (missing, stale, broken `{name}`), RULES.md's motion rules in its CSS (curves are tokens, nothing animates font-size, padding or margin), and long fixed waits in its tests |
+| `RULES.md` | The rules that stop bugs and drift: motion, components, words, saving, state, timers, tests. The app's own DESIGN.md and CONTRIBUTING.md name its classes and helpers |
 | `test/keel.test.js` | Fails an app's tests if a keel file was edited there |
 | `.claude/skills/github-pages` | The GitHub Pages skill |
 

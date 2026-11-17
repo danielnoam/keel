@@ -6,8 +6,9 @@ and no dependencies**, started from keel's template.
 ## Before anything
 
 - `git pull --ff-only` first.
-- Read **CONTRIBUTING.md**: the rules for every change, the notes files,
-  versions and releases. Below is only what's specific to Claude sessions.
+- Read **CONTRIBUTING.md** (the rules for every change, the notes files,
+  versions and releases) and **RULES.md** (keel's rules that stop bugs
+  and drift). Below is only what's specific to Claude sessions.
 
 ## Shipping
 

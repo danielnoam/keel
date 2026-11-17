@@ -56,6 +56,11 @@ animation has a reduced-motion answer. Moves go through keel's motion
 (`__APPNS__.motion`), which turns each into a short fade under reduced
 motion; a CSS transition uses its `--spring-*` variables.
 
+**RULES.md.** The rules that stop bugs and drift (motion, components,
+words, saving, state, timers, tests) come from keel and hold for every
+change. `test/motion.test.js` and `test/waits.test.js` check the ones a
+test can.
+
 **Ask first for big things.** A new look, a reworked screen or a big
 change is shown or explained to Daniel first and waits for his OK.
 

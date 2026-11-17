@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## [0.11.0] - 2026-11-17
+
+### Added
+- `RULES.md`: short rules that stop bugs and drift, each from a real
+  bug or inconsistency in LifeLog: motion (exits, direction, curves as
+  tokens, no re-layout), components (one class per job, one height per
+  bar, swipeable sheets), words (one name per thing, no "— none —"),
+  saving (say why, one delete path, refuse bad data on write), state
+  (merge over the current record, derived state in one function), timers
+  and async, tests (no fixed sleeps).
+- `tools/keel-checks.js`: `motion.check(css)` (literal curves, keyword
+  curves outside a status loop, transitions or keyframes on font-size,
+  line-height, letter-spacing, padding or margin) and `waits.find(files,
+  min)` (fixed waits of at least `min` ms in tests).
+- Template: `test/motion.test.js` and `test/waits.test.js`; CLAUDE.md and
+  CONTRIBUTING.md point to RULES.md.
+- **Apps should**: point their CLAUDE.md and CONTRIBUTING.md at RULES.md,
+  and run the two checks in their tests.
+
 ## [0.10.0] - 2026-11-16
 
 ### Changed
