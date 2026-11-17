@@ -3,7 +3,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { contrast, csp } = require("../tools/keel-checks.js");
+const { contrast, csp, motion, waits } = require("../tools/keel-checks.js");
 
 let passed = 0;
 function test(name, fn) {
@@ -79,6 +79,36 @@ test("code that needs unsafe-inline or unsafe-eval is named", () => {
   const p = csp.check(GOOD, [ok, bad]);
   assert.strictEqual(p.length, 3, p.join(" | "));
   assert.ok(p.every((x) => x.includes("bad.js")));
+});
+
+test("motion: literal and keyword curves fail, tokens, springs and status loops pass", () => {
+  const css = `:root { --ease: cubic-bezier(.4,0,.2,1); --spring: linear(0, 1); }
+.a { transition: opacity .2s var(--ease), transform var(--spring-ms) var(--spring); }
+.b { animation: pulse 1s ease-in-out infinite; }
+.c { transition: opacity .1s var(--ease), visibility 0s linear .1s; }
+/* .d { transition: color .2s ease; } */
+.e { transition: color .2s ease; }
+.f { animation: rise .2s cubic-bezier(.2,1,.3,1) both; }`;
+  assert.deepStrictEqual(motion.check(css), ["6: the keyword curve `ease`: use a token", "7: a literal curve, cubic-bezier(.2,1,.3,1): use a token"]);
+});
+
+test("motion: transitions and keyframes on layout properties fail", () => {
+  const css = `.a { transition: color .2s var(--ease), font-size .2s var(--ease); }
+.b { transition-property: padding-inline; }
+@keyframes grow { from { font-size: 12px; } to { font-size: 14px; } }
+@keyframes ok { from { opacity: 0; transform: scale(.9); } }`;
+  const out = motion.check(css);
+  assert.strictEqual(out.length, 3, out.join("\n"));
+  assert.match(out[0], /^1: a transition on font-size/);
+  assert.match(out[1], /^2: a transition on padding-inline/);
+  assert.match(out[2], /^3: @keyframes grow animates font-size/);
+});
+
+test("waits: fixed waits at or over the bar are found with their line", () => {
+  const f = path.join(os.tmpdir(), "keel-waits-" + process.pid + ".js");
+  fs.writeFileSync(f, "await page.waitForTimeout(300);\nawait page.waitForTimeout(1800);\nawait new Promise((r) => setTimeout(r, 2000));\n");
+  try { assert.deepStrictEqual(waits.find([f], 1000).map((w) => [w.line, w.ms]), [[2, 1800], [3, 2000]]); }
+  finally { fs.unlinkSync(f); }
 });
 
 console.log(passed + " passed");

@@ -1,5 +1,5 @@
 {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "files": [
     "server.js",
     "src/keel/qr.js",
@@ -16,6 +16,7 @@
     "tools/keel-sync.js",
     "tools/keel-checks.js",
     "test/keel.test.js",
-    ".claude/skills/github-pages/SKILL.md"
+    ".claude/skills/github-pages/SKILL.md",
+    "RULES.md"
   ]
 }
