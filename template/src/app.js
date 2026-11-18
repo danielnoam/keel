@@ -32,13 +32,20 @@
 
   // A newer release on GitHub, for the apps; the web copy updates itself.
   // Its name is the one on the release's assets (__APPNS__.apk) and in
-  // the test build cache sw.js serves from.
+  // the test build cache sw.js serves from. On the channel "unreleased"
+  // (releases.setChannel(), kept on this device) the newest build of main
+  // is offered too, from the site's unreleased/ (tools/unreleased.js).
   const releases = K.releases.create({ name: "__APPNS__", repo: () => (K.platform.build && K.platform.build.repo) || null });
   if (K.platform.bundled) {
-    K.platform.ready.then(() => releases.latest()).then((r) => {
-      if (!r || !K.releases.newer(r.version, APP_VERSION)) return;
+    K.platform.ready.then((b) => {
+      const kind = K.platform.desktopOs === "windows" ? "windows" : K.platform.os === "android" ? "android" : null;
+      return releases.check({ version: APP_VERSION, sha: b && b.sha, at: b && b.builtAt }, kind);
+    }).then((r) => {
+      if (!r) return;
       const el = $("update");
-      el.textContent = t("Version {v} is out.", { v: r.version });
+      el.textContent = r.channel === "unreleased"
+        ? t("A newer unreleased build is ready ({sha}).", { sha: r.sha.slice(0, 7) })
+        : t("Version {v} is out.", { v: r.version });
       el.hidden = false;
     }).catch(() => { /* offline: ask again next launch */ });
   }

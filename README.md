@@ -20,9 +20,10 @@ serves straight from the repo and the native builds need no extra step.
 | `src/keel/platform.js` | Where the app runs, on `window.Keel.platform`: phone (`native`, `os`, `plugin()`), desktop (Tauri), browser; `app-build.json`; links to other sites go to the device's browser; `deadline()`. Each app's platform.js keeps the rest |
 | `src/keel/motion.js` | Springs sampled into CSS `linear()` and the moves made with them, on `window.Keel.motion.create({touch, desktop, ...})`: screens, sheets, menus, dialogs, lists, press feedback; reduced motion and Animations off handled; sideways moves mirror right to left (`rtl()`, `x(n)`). Each app passes its own springs |
 | `src/keel/i18n.js` | The reader's language, on `window.Keel.i18n.create({key, langs})`: `t("English")` keyed by the English (shown as is until a table has it), plurals, `{name}` filling, `data-t` markup, `lang` and `dir="rtl"` on `<html>`, the device's language or a saved choice, dates, numbers and lists through `Intl`. Each app keeps its tables in `src/lang/<code>.js` |
-| `src/keel/releases.js` | The app's own releases, on `window.Keel.releases`: the latest one (update check), the test builds list, opening a test build in the browser. Each app keeps its bar and screens |
+| `src/keel/releases.js` | The app's own releases, on `window.Keel.releases`: the latest one (update check), the test builds list, opening a test build in the browser, and the channel (`channel()`, `setChannel()`, `check(mine, kind)`: release, or unreleased for the newest build of main). Each app keeps its bar and screens |
 | `src/keel/sw-preview.js` | The service worker's half of a test build in the browser (`importScripts`): that commit's files, the Back to the release bar |
 | `tools/release.js` | `node tools/release.js x.y.z`: bumps APP_VERSION, `?v=` tags and the sw.js cache, folds `changes/*.md` into CHANGELOG.md |
+| `tools/unreleased.js` | The unreleased channel: `note` in a build of main writes what it is beside the APK or installer (the artifact `unreleased-<kind>`); `fetch <dir>` in the Pages deploy puts the newest of each, with `build.json`, under the site's `unreleased/`. Not on the Releases page; hidden, not private |
 | `tools/android-version.js` | Stamps APP_VERSION into the Android project's versionCode |
 | `tools/keel-sync.js` | Pulls a keel release into an app and checks it |
 | `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, its Content-Security-Policy and the code under it, each language's table against the words the code uses (missing, stale, broken `{name}`), RULES.md's motion rules in its CSS (curves are tokens, nothing animates font-size, padding or margin), and long fixed waits in its tests |
@@ -77,7 +78,8 @@ Windows and Linux (Tauri), shaped like LifeLog:
   updater), `assets/logo.svg`, and the tools the builds run
   (`build-www.js`, `android-manifest.js`, `ios-project.js`, `sign-apk.sh`,
   `test-build.sh`, `desktop-files.js`)
-- the workflows: Tests, Pages after the tests, Android (the release),
+- the workflows: Tests, Pages after the tests (with the unreleased
+  channel's files), Android (the release, and every merge's unreleased build),
   Desktop (Windows, Linux by hand), iOS (by hand), and test builds by
   pull request label
 
