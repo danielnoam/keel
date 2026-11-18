@@ -21,8 +21,8 @@ concurrency:
 jobs:
   # main builds on every merge: a release when APP_VERSION is new, and the
   # unreleased channel's build either way. Any other branch builds when its
-  # open pull request carries a test label (test or test-android), so a branch push doesn't spend a
-  # build nobody asked for, or when the workflow is run by hand: that APK
+  # open pull request carries a test label (test or test-android), so a
+  # branch push doesn't spend a build nobody asked for, or when the workflow is run by hand: that APK
   # gets the throwaway key and no pre-release, since only a label makes a
   # test build.
   gate:
