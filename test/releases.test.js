@@ -26,6 +26,8 @@ function fakeCaches() {
 global.window = {};
 global.location = { hostname: "someone.github.io", pathname: "/app/", href: "https://someone.github.io/app/", replace(u) { this.went = u; } };
 global.caches = fakeCaches();
+const store = new Map();
+global.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
 Object.defineProperty(globalThis, "navigator", { value: { serviceWorker: { controller: {} } }, configurable: true });
 require("../src/keel/releases.js");
 const R = window.Keel.releases;
@@ -128,6 +130,54 @@ const RELEASES = [
     assert.strictEqual(res.status, 302);
     assert.deepStrictEqual(await caches.keys(), []);
     assert.strictEqual(await (await P.respond(ev("src/app.js"), release)).text(), "release");
+  });
+
+  await test("the site of a repo", () => {
+    assert.strictEqual(R.siteOf("DanielNoam/LifeLog"), "https://danielnoam.github.io/LifeLog/");
+    assert.strictEqual(R.siteOf(""), null);
+  });
+
+  await test("which update to offer, per channel", () => {
+    const mine = { version: "1.2.0", sha: "aaa", at: "2026-11-01T00:00:00Z" };
+    const u = { version: "1.2.0", sha: "bbb", at: "2026-11-02T00:00:00Z", url: "https://x/unreleased/App.apk" };
+    assert.strictEqual(R.pick("release", mine, { version: "1.2.0" }, u), null, "release ignores main");
+    assert.deepStrictEqual(R.pick("release", mine, { version: "1.3.0", notes: "n" }, u), { channel: "release", version: "1.3.0", notes: "n" });
+    assert.strictEqual(R.pick("unreleased", mine, { version: "1.2.0" }, u).sha, "bbb");
+    assert.strictEqual(R.pick("unreleased", { ...mine, sha: "bbb" }, null, u), null, "already on it");
+    assert.strictEqual(R.pick("unreleased", { ...mine, at: "2026-11-03T00:00:00Z" }, null, u), null, "built before this one");
+    assert.strictEqual(R.pick("unreleased", { ...mine, version: "1.3.0" }, null, u), null, "behind this version");
+    assert.strictEqual(R.pick("unreleased", mine, { version: "1.3.0" }, u).channel, "release", "a newer release wins");
+    assert.strictEqual(R.pick("unreleased", { version: "1.2.0", sha: null, at: null }, null, u).sha, "bbb", "an old build without a sha");
+  });
+
+  await test("the channel is kept, and check() reads build.json only on unreleased", async () => {
+    const asked = [];
+    const fetchText = async (url) => {
+      asked.push(url);
+      if (url.endsWith("/releases/latest")) return { status: 200, text: JSON.stringify({ tag_name: "app-v1.2.0", body: "" }) };
+      if (url.includes("/unreleased/build.json")) return { status: 200, text: JSON.stringify({ android: { version: "1.2.0", sha: "bbb", at: "2026-11-02T00:00:00Z", file: "App.apk" }, windows: { file: "../x" } }) };
+      return { status: 404, text: "" };
+    };
+    const r = R.create({ name: "App", repo: () => "Me/App", fetchText });
+    assert.strictEqual(r.channel(), "release");
+    assert.strictEqual(await r.check({ version: "1.2.0", sha: "aaa" }, "android"), null);
+    assert.ok(!asked.some((u) => u.includes("unreleased")));
+    r.setChannel("unreleased");
+    assert.strictEqual(r.channel(), "unreleased");
+    const got = await r.check({ version: "1.2.0", sha: "aaa", at: "2026-11-01T00:00:00Z" }, "android");
+    assert.deepStrictEqual(got, { channel: "unreleased", version: "1.2.0", sha: "bbb", at: "2026-11-02T00:00:00Z", url: "https://me.github.io/App/unreleased/App.apk" });
+    assert.deepStrictEqual(Object.keys(await r.unreleased()), ["android"], "a file name with a path is dropped");
+    r.setChannel("release");
+    assert.strictEqual(r.channel(), "release");
+  });
+
+  await test("check() on unreleased still works when releases can't be read", async () => {
+    const r = R.create({ name: "Two", repo: () => "me/two", fetchText: async (url) => (url.includes("unreleased")
+      ? { status: 200, text: JSON.stringify({ windows: { version: "1.0.0", sha: "c", at: "2026-11-02T00:00:00Z", file: "Two-setup.exe" } }) }
+      : { status: 403, text: "" }) });
+    await assert.rejects(r.check({ version: "1.0.0" }, "windows"));
+    r.setChannel("unreleased");
+    assert.strictEqual((await r.check({ version: "1.0.0", sha: "a" }, "windows")).url, "https://me.github.io/two/unreleased/Two-setup.exe");
   });
 
   console.log(passed + " passed");

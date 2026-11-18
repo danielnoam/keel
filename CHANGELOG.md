@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## [0.12.0] - 2026-11-18
+
+### Added
+- The unreleased channel: the newest build of main, which isn't a
+  release, offered only inside the app and never on the Releases page.
+  Hidden, not private: the repo is public, and anyone with the address
+  can download it.
+- `src/keel/releases.js`: `channel()` and `setChannel("release" |
+  "unreleased")` (kept in localStorage as `<name>.channel`, or
+  `channelKey`), `unreleased()` (the site's `unreleased/build.json`),
+  `check(mine, kind)` (the update to offer: a newer release, or on
+  unreleased a build of main from another commit built after this one),
+  `site()` (the Pages site, or the `site` option); `siteOf()` and
+  `pick()` on `Keel.releases`.
+- `tools/unreleased.js`: `note <android|windows> <file>` in a build of
+  main, `fetch <dir>` in the Pages deploy.
+- Template: android.yml and desktop.yml build every merge to main and
+  leave `unreleased-android` / `unreleased-windows` artifacts; pages.yml
+  puts them under `unreleased/` and deploys again when a build of main
+  finishes; the update check uses `check()`; the CSP lets the app read
+  its own site.
+- **Apps must**, to use it: build every merge to main and upload the
+  artifact `unreleased-<kind>` (the file and its note) from android.yml
+  and desktop.yml; deploy Pages from Actions with `tools/unreleased.js
+  fetch unreleased` and the `workflow_run` trigger (template/pages.yml);
+  allow their site in connect-src; give Settings a Channel choice and
+  read `check()` in the update check.
+
 ## [0.11.0] - 2026-11-17
 
 ### Added

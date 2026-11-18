@@ -84,6 +84,13 @@ change is shown or explained to Daniel first and waits for his OK.
 - A merge with a new version publishes the release `app-v<version>`:
   the APK (`android.yml`), then the Windows app (`desktop.yml`) beside
   it. iOS (`ios.yml`) and Linux build only when run by hand.
+- Every other merge to `main` builds the APK and the Windows app too:
+  the **unreleased** channel. They aren't put on the Releases page; the
+  Pages deploy serves them from `unreleased/` with `build.json`
+  (`tools/unreleased.js`), and only an app set to Channel → Unreleased
+  offers them. Hidden, not private: the repo is public. They keep the last
+  release's version, so they install over it and the next release
+  installs over them.
 - A pull request labelled `test` (or `test-android`, `test-ios`,
   `test-desktop`, `test-linux`) gets a test build on the pre-release
   `test-<branch>`; the label coming off or the PR closing removes it.

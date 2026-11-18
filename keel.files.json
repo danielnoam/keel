@@ -1,5 +1,5 @@
 {
-  "version": "0.11.0",
+  "version": "0.12.0",
   "files": [
     "server.js",
     "src/keel/qr.js",
@@ -13,6 +13,7 @@
     "src/keel/sw-preview.js",
     "tools/release.js",
     "tools/android-version.js",
+    "tools/unreleased.js",
     "tools/keel-sync.js",
     "tools/keel-checks.js",
     "test/keel.test.js",

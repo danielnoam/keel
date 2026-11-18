@@ -18,6 +18,8 @@ and no dependencies**, started from keel's template.
 - Builds are the web app, Windows and the APK by default. iOS and Linux
   only when Daniel asks (run `ios.yml`, or `desktop.yml` with Linux ticked,
   or label the PR `test-ios` / `test-linux`).
+- Every merge to main also builds the unreleased channel (APK and
+  Windows, served from the site's `unreleased/`, not Releases).
 - To try a change on a phone before it merges, label its PR `test` and
   say the build is on the `test-<branch>` pre-release.
 - Shared files come from keel (danielnoam/keel): change them there, then
