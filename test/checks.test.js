@@ -3,7 +3,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { contrast, csp, motion, waits } = require("../tools/keel-checks.js");
+const { contrast, csp, i18n, motion, waits } = require("../tools/keel-checks.js");
 
 let passed = 0;
 function test(name, fn) {
@@ -109,6 +109,25 @@ test("waits: fixed waits at or over the bar are found with their line", () => {
   fs.writeFileSync(f, "await page.waitForTimeout(300);\nawait page.waitForTimeout(1800);\nawait new Promise((r) => setTimeout(r, 2000));\n");
   try { assert.deepStrictEqual(waits.find([f], 1000).map((w) => [w.line, w.ms]), [[2, 1800], [3, 2000]]); }
   finally { fs.unlinkSync(f); }
+});
+
+test("i18n.literals: English set straight into the UI is found, t() and en-only lines pass", () => {
+  const f = path.join(os.tmpdir(), "keel-literals-" + process.pid + ".js");
+  fs.writeFileSync(f, [
+    'toast("Saved");',
+    'toast(t("Saved"));',
+    'el.textContent = "Read the original";',
+    'el.textContent = n + " left";',
+    'img.setAttribute("alt", "Page " + n);',
+    'btn.title = "v" + APP_VERSION; // en-only: the version',
+    '// toast("in a comment");',
+    'if (!ok) return confirm(\'Delete it?\');',
+    'el.placeholder = `Search`;',
+  ].join("\n"));
+  try {
+    assert.deepStrictEqual(i18n.literals([f]).map((x) => [x.line, x.text]),
+      [[1, "Saved"], [3, "Read the original"], [5, "Page "], [8, "Delete it?"], [9, "Search"]]);
+  } finally { fs.unlinkSync(f); }
 });
 
 console.log(passed + " passed");
