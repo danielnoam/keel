@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [0.12.1] - 2026-11-18
+## [0.13.1] - 2026-11-20
 
 ### Changed
 - RULES.md: "Looks that read as machine-made", from Hallmark's list: no
@@ -10,6 +10,20 @@
   backdrops as tokens, no card in a card, no decorative status dots, no
   made-up numbers. Rules only; nothing new is checked, so no app has to
   change to sync.
+
+## [0.13.0] - 2026-11-19
+
+### Added
+- RULES.md: "Every language, every screen". A feature works in every
+  language and on every screen and platform the app ships to, or says
+  plainly (PR, release note, docs) which platform it was built for and
+  that the others never got it.
+- `tools/keel-checks.js`: `i18n.literals(files)` finds UI text set
+  straight from an English literal (`toast("...")`, `.textContent =
+  "..."`, `setAttribute("alt", "...")` and the like). A line that stays
+  English on purpose says `// en-only: <why>`.
+- **Apps may**, to enforce it: call `i18n.literals` from their i18n test
+  and fail on what it finds.
 
 ## [0.12.0] - 2026-11-18
 
