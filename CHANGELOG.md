@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## [0.13.1] - 2026-11-20
+
+### Changed
+- RULES.md: "Looks that read as machine-made", from Hallmark's list: no
+  tracked-capital labels or eyebrows, no middle-dot joins, shadows and
+  backdrops as tokens, no card in a card, no decorative status dots, no
+  made-up numbers. Rules only; nothing new is checked, so no app has to
+  change to sync.
+
 ## [0.13.0] - 2026-11-19
 
 ### Added
