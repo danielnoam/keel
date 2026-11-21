@@ -1,6 +1,6 @@
 // __NAME__: the app. keel's files (src/keel/) load before it: errlog.js
 // first, then platform.js (where it runs), i18n.js (the reader's
-// language), releases.js (updates) and motion.js (springs and moves).
+// language), releases.js and update.js (updates) and motion.js (springs and moves).
 (function () {
   const APP_VERSION = "0.1.0";
   const K = window.Keel;
@@ -35,18 +35,18 @@
   // the test build cache sw.js serves from. On the channel "unreleased"
   // (releases.setChannel(), kept on this device) the newest build of main
   // is offered too, from the site's unreleased/ (tools/unreleased.js).
+  // keel's update.js puts it on the bar: on Android, Update downloads the
+  // APK and opens the installer; elsewhere the browser has it. A closed
+  // bar stays closed until a newer one.
   const releases = K.releases.create({ name: "__APPNS__", repo: () => (K.platform.build && K.platform.build.repo) || null });
+  const updater = K.update.create({ name: "__APPNS__" });
   if (K.platform.bundled) {
-    K.platform.ready.then((b) => {
+    Promise.all([K.platform.ready, i18n.ready]).then(([b]) => {
+      updater.clearOld({ version: APP_VERSION, sha: b && b.sha });
       const kind = K.platform.desktopOs === "windows" ? "windows" : K.platform.os === "android" ? "android" : null;
       return releases.check({ version: APP_VERSION, sha: b && b.sha, at: b && b.builtAt }, kind);
-    }).then((r) => {
-      if (!r) return;
-      const el = $("update");
-      el.textContent = r.channel === "unreleased"
-        ? t("A newer unreleased build is ready ({sha}).", { sha: r.sha.slice(0, 7) })
-        : t("Version {v} is out.", { v: r.version });
-      el.hidden = false;
+    }).then((u) => {
+      if (u) updater.offer(u, { bar: $("update"), text: $("updateText"), btn: $("updateBtn"), close: $("updateClose") }, t);
     }).catch(() => { /* offline: ask again next launch */ });
   }
 
@@ -55,5 +55,5 @@
   // there is one) says which moves it uses.
   const motion = K.motion.create();
 
-  window.__APPNS__ = { version: APP_VERSION, i18n, releases, motion };
+  window.__APPNS__ = { version: APP_VERSION, i18n, releases, updater, motion };
 })();

@@ -15,11 +15,16 @@
   <main id="app">
     <h1>__NAME__</h1>
     <p class="dim" id="version"></p>
-    <p id="update" class="update" hidden></p>
+    <div id="update" class="update" role="status" hidden>
+      <span class="update-text" id="updateText"></span>
+      <button class="update-btn" id="updateBtn" type="button"></button>
+      <button class="update-close" id="updateClose" type="button" aria-label="Not now" title="Not now" data-t-attr="aria-label,title">×</button>
+    </div>
   </main>
   <script src="src/keel/platform.js?v=0.1.0"></script>
   <script src="src/keel/i18n.js?v=0.1.0"></script>
   <script src="src/keel/releases.js?v=0.1.0"></script>
+  <script src="src/keel/update.js?v=0.1.0"></script>
   <script src="src/keel/motion.js?v=0.1.0"></script>
   <script src="src/app.js?v=0.1.0"></script>
 </body>
