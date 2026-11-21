@@ -17,7 +17,7 @@ src/keel/errlog.js   the errors this device hit (from keel, loaded first)
 src/keel/platform.js where it runs: browser, phone or desktop (from keel)
 src/keel/i18n.js     the reader's language: t(), rtl, dates and numbers (from keel)
 src/keel/releases.js the update check and test builds (from keel)
-src/keel/update.js   the update bar: on Android, Update downloads the APK and opens the installer; elsewhere the browser has it (from keel)
+src/keel/update.js   the update bar: on Android, Update downloads the APK and opens the installer; on the desktop app Tauri's updater installs and restarts (once the release has signed files); elsewhere the browser has it (from keel)
 src/keel/motion.js   springs and moves, made in app.js (from keel)
 src/keel/sw-preview.js  the service worker's half of a test build (from keel)
 test/run-all.js      runs every test/*.test.js

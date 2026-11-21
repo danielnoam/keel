@@ -168,5 +168,75 @@ const make = (p, more) => U.create({ name: "App", platform: p.platform, ...more 
     assert.deepStrictEqual(p.calls.map((c) => c[1]), ["App-1.2.3.apk"]);
   });
 
+  function computer({ none, failWith, own } = {}) {
+    const calls = [];
+    const opened = [];
+    const update = { version: "1.2.3", async downloadAndInstall(cb) {
+      calls.push("install");
+      cb({ event: "Started", data: { contentLength: 200 } });
+      cb({ event: "Progress", data: { chunkLength: 50 } });
+      if (failWith) throw new Error(failWith);
+    } };
+    const tauri = { updater: { async check() { calls.push("check"); return none ? null : update; } }, process: { async relaunch() { calls.push("relaunch"); } } };
+    const platform = { native: false, os: "web", desktop: true, tauri, build: { repo: "me/App" }, openOutside: (u) => opened.push(u) };
+    return { platform, calls, opened };
+  }
+
+  await test("desktop: Update asks Tauri's updater, downloads with the %, installs and restarts", async () => {
+    store.clear();
+    const c = computer();
+    const e = els();
+    const seen = [];
+    const btn = e.btn;
+    Object.defineProperty(btn, "textContent", { get() { return this._t; }, set(v) { this._t = v; seen.push(v); } });
+    U.create({ name: "App", platform: c.platform }).offer({ channel: "release", version: "1.2.3" }, e, t);
+    assert.strictEqual(e.btn.textContent, "Update");
+    await e.btn.onclick();
+    assert.deepStrictEqual(c.calls, ["check", "install", "relaunch"]);
+    assert.ok(seen.includes("25%"), seen.join());
+  });
+
+  await test("desktop: no signed files on the release turns the bar into the release page, and it stays one", async () => {
+    const c = computer({ none: true });
+    const e = els();
+    U.create({ name: "App", platform: c.platform }).offer({ channel: "release", version: "1.2.3" }, e, t);
+    await e.btn.onclick();
+    assert.strictEqual(e.btn.textContent, "Open page");
+    await e.btn.onclick();
+    assert.deepStrictEqual(c.calls, ["check"]);
+    assert.deepStrictEqual(c.opened, ["https://github.com/me/App/releases/tag/app-v1.2.3", "https://github.com/me/App/releases/tag/app-v1.2.3"]);
+  });
+
+  await test("desktop: a read-only folder says so and offers the page; another failure offers Try again", async () => {
+    const r = computer();
+    const e = els();
+    U.create({ name: "App", platform: r.platform, desktop: { find: async () => ({ portable: true }), install: async () => { throw new Error("readonly"); } } })
+      .offer({ channel: "release", version: "1.2.3" }, e, t);
+    await e.btn.onclick();
+    assert.strictEqual(e.text.textContent, "The app's folder is read-only, so it can't update itself.");
+    assert.strictEqual(e.btn.textContent, "Open page");
+    const f = computer({ failWith: "net" });
+    const e2 = els();
+    U.create({ name: "App", platform: f.platform }).offer({ channel: "release", version: "1.2.3" }, e2, t);
+    await e2.btn.onclick();
+    assert.strictEqual(e2.text.textContent, "The update didn't finish.");
+    assert.strictEqual(e2.btn.textContent, "Try again");
+  });
+
+  await test("desktop: an app's own find and install are used instead of Tauri's; an unreleased build opens its file", async () => {
+    const c = computer();
+    const got = [];
+    const u = U.create({ name: "App", platform: c.platform, desktop: { find: async () => ({ v: 1 }), install: async (x, on) => { got.push(x); on(1); return true; } } });
+    assert.deepStrictEqual(await u.findDesktop(), { v: 1 });
+    assert.strictEqual(await u.installDesktop(null, () => {}), true);
+    assert.deepStrictEqual(got, [{ v: 1 }]);
+    assert.deepStrictEqual(c.calls, []);
+    const e = els();
+    u.offer({ channel: "unreleased", sha: "0123456789", url: "https://x/unreleased/App.zip" }, e, t);
+    assert.strictEqual(e.btn.textContent, "Get it");
+    e.btn.onclick();
+    assert.deepStrictEqual(c.opened, ["https://x/unreleased/App.zip"]);
+  });
+
   console.log(passed + " passed");
 })();

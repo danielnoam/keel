@@ -13,8 +13,15 @@
   `clearOld(mine)` drops APKs this build is past at launch (`keepBuilds`
   keeps other test and unreleased ones). `offer(u, els, t)` is the whole
   bar: Update with the %, Install to reopen the installer, Try again,
-  and × hiding it until a newer update. Without the plugins, on iOS and
-  on a computer it opens the file or the release page in the browser.
+  and × hiding it until a newer update. Without the plugins and on iOS
+  it opens the file or the release page in the browser.
+- `update.js` on the desktop app (from LifeLog's): `findDesktop()` asks
+  Tauri's updater for the release's latest.json, `installDesktop()`
+  downloads, installs and restarts; `offer()` does it from the bar with
+  the %, falls back to the release page when the release has no signed
+  files (and stays the page), says so when the app's folder is
+  read-only, and opens an unreleased build's file. An app with its own
+  install (LifeLog's portable exe) passes `desktop: { find, install }`.
 - Template: the update bar is a real one on `offer()` (it said "Version
   x is out" with nothing to tap), with `@capacitor/filesystem` and
   `@capawesome-team/capacitor-file-opener` in package.json, the Hebrew,

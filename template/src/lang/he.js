@@ -17,4 +17,8 @@ Keel.i18n.strings("he", {
   "Downloading build {sha}…": "מורידים את גרסה {sha}…",
   "Downloading version {version}…": "מורידים את גרסה {version}…",
   "The download didn't finish.": "ההורדה לא הסתיימה.",
+  "Checking…": "בודקים…",
+  "Open page": "לפתיחת הדף",
+  "The update didn't finish.": "העדכון לא הסתיים.",
+  "The app's folder is read-only, so it can't update itself.": "התיקייה של האפליקציה מוגנת מכתיבה, אז היא לא יכולה לעדכן את עצמה.",
 });
