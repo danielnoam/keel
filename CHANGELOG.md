@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## [0.15.0] - 2026-11-21
+
+### Added
+- `src/keel/update.js`: installing the app's own update, from LifeLog's,
+  Waypage's and Tripboard's own copies, which it replaces. On Android,
+  `download(u, onProgress)` puts the release's (or an unreleased or test
+  build's) APK in the app's cache through Capacitor's Filesystem, or the
+  app's own `fetch` first; `install(uri)` opens Android's installer;
+  `clearOld(mine)` drops APKs this build is past at launch (`keepBuilds`
+  keeps other test and unreleased ones). `offer(u, els, t)` is the whole
+  bar: Update with the %, Install to reopen the installer, Try again,
+  and × hiding it until a newer update. Without the plugins and on iOS
+  it opens the file or the release page in the browser.
+- `update.js` on the desktop app (from LifeLog's): `findDesktop()` asks
+  Tauri's updater for the release's latest.json, `installDesktop()`
+  downloads, installs and restarts; `offer()` does it from the bar with
+  the %, falls back to the release page when the release has no signed
+  files (and stays the page), says so when the app's folder is
+  read-only, and opens an unreleased build's file. An app with its own
+  install (LifeLog's portable exe) passes `desktop: { find, install }`.
+- Template: the update bar is a real one on `offer()` (it said "Version
+  x is out" with nothing to tap), with `@capacitor/filesystem` and
+  `@capawesome-team/capacitor-file-opener` in package.json, the Hebrew,
+  and its trade-off in ARCHITECTURE.md. Its i18n test reads update.js's
+  words too.
+- **Apps must**, to use it: load `src/keel/update.js` after releases.js
+  (and add it to sw.js's ASSETS), have both plugins and
+  REQUEST_INSTALL_PACKAGES for Android, and have the bar's words in each
+  language when they use `offer()`.
+
 ## [0.14.0] - 2026-11-21
 
 ### Added

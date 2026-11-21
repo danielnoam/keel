@@ -17,6 +17,7 @@ src/keel/errlog.js   the errors this device hit (from keel, loaded first)
 src/keel/platform.js where it runs: browser, phone or desktop (from keel)
 src/keel/i18n.js     the reader's language: t(), rtl, dates and numbers (from keel)
 src/keel/releases.js the update check and test builds (from keel)
+src/keel/update.js   the update bar: on Android, Update downloads the APK and opens the installer; on the desktop app Tauri's updater installs and restarts (once the release has signed files); elsewhere the browser has it (from keel)
 src/keel/motion.js   springs and moves, made in app.js (from keel)
 src/keel/sw-preview.js  the service worker's half of a test build (from keel)
 test/run-all.js      runs every test/*.test.js
@@ -49,6 +50,13 @@ here: fix them in keel, release it, then `node tools/keel-sync.js v<x.y.z>`.
 
 What the app gives up on purpose, said plainly. A change that adds one
 adds a line here.
+
+- **The app installs its own updates** (keel's update.js). The Android
+  app has REQUEST_INSTALL_PACKAGES and downloads the APK from the repo's
+  public GitHub release over HTTPS, then hands it to Android's installer.
+  Android shows its own install screen every time and only installs over
+  the app if the APK is signed with the same key, so what this trusts is
+  the GitHub account that publishes releases and the signing key.
 
 ## Traps
 

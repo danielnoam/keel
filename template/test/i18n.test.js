@@ -15,7 +15,8 @@ function test(name, fn) {
 
 const ROOT = path.join(__dirname, "..");
 const src = fs.readdirSync(path.join(ROOT, "src")).filter((f) => f.endsWith(".js")).map((f) => path.join(ROOT, "src", f));
-const used = i18n.keys([...src, path.join(ROOT, "index.html")]);
+// keel's update.js draws the update bar, so its words are this app's too.
+const used = i18n.keys([...src, path.join(ROOT, "src/keel/update.js"), path.join(ROOT, "index.html")]);
 const langs = path.join(ROOT, "src/lang");
 
 for (const f of fs.readdirSync(langs).filter((x) => x.endsWith(".js"))) {
