@@ -152,6 +152,16 @@ const make = (p, more) => U.create({ name: "App", platform: p.platform, ...more 
     assert.deepStrictEqual(p.calls.map((c) => c[1]), ["App-1.2.3.apk.part", "App-test-fix-x-abcdef1.apk"]);
   });
 
+  await test("releases.js may load after update.js: newer is looked up when it's needed", async () => {
+    const keep = window.Keel.releases;
+    delete window.Keel.releases;
+    const p = phone({ files: ["App-1.2.3.apk", "App-1.2.4.apk"] });
+    const u = make(p);
+    window.Keel.releases = keep;
+    await u.clearOld({ version: "1.2.3" });
+    assert.deepStrictEqual(p.calls.map((c) => c[1]), ["App-1.2.3.apk"]);
+  });
+
   await test("a plain version string is enough for clearOld", async () => {
     const p = phone({ files: ["App-1.2.3.apk", "App-1.2.4.apk"] });
     await make(p).clearOld("1.2.3");

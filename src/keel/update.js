@@ -37,7 +37,8 @@
     const K = (typeof window !== "undefined" && window.Keel) || {};
     const NAME = o.name;
     const P = o.platform || K.platform;
-    const newer = o.newer || (K.releases && K.releases.newer);
+    // Looked up when used: releases.js may load after this.
+    const newer = (a, b) => (o.newer || K.releases.newer)(a, b);
     const plugin = (n) => (P.plugin ? P.plugin(n) : (P.native && P.cap && P.cap.Plugins && P.cap.Plugins[n]) || null);
     const repo = () => (o.repo && o.repo()) || (P.build && P.build.repo) || null;
     const SKIP = o.skipKey || String(NAME).toLowerCase() + ".update.skip";
