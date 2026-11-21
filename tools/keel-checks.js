@@ -153,7 +153,7 @@ function cspCheck(html, files = []) {
     try { const u = new URL(site); if (u.protocol === "https:") origin = u.origin; } catch (e) { /* reported below */ }
     const connect = (/(?:^|;)\s*connect-src([^;]*)/.exec(policy) || [])[1] || "";
     if (!origin) out.push("keel-site should be an https address: " + site);
-    else if (!connect.split(/\s+/).includes(origin)) out.push("connect-src doesn't allow keel-site's " + origin);
+    else if (!connect.split(/\s+/).some((x) => x === origin || x === "https:" || x === "*")) out.push("connect-src doesn't allow keel-site's " + origin);
   }
   if (repo !== null && !/^[\w.-]+\/[\w.-]+$/.test(repo)) out.push("keel-repo should be owner/name: " + repo);
   for (const f of files) {
