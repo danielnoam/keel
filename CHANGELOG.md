@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## [0.14.0] - 2026-11-21
+
+### Added
+- `src/keel/releases.js`: the app's home can be named in index.html, for
+  a custom domain or a repo that moved to an organization:
+  `<meta name="keel-site" content="https://…/">` (where the unreleased
+  builds are looked for) and `<meta name="keel-repo" content="owner/name">`
+  (how a web copy away from github.io finds its repo). Without them
+  nothing changes: owner.github.io/repo/ as before. `metaSite()` is new.
+- `tools/keel-checks.js`: `csp.check` fails a keel-site that isn't https
+  or whose origin connect-src doesn't allow, and a keel-repo that isn't
+  owner/name.
+- Template: `build-www.js` takes app-build.json's `webUrl` from keel-site
+  when index.html has one.
+- **Apps may**, before a move: add the two metas (and the site's origin
+  to connect-src) and make their build-www.js read keel-site the way the
+  template's does. Installed copies keep the index.html they were built
+  with, so ship a release with the new address before the old one stops
+  answering.
+
 ## [0.13.1] - 2026-11-20
 
 ### Changed

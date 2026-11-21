@@ -73,6 +73,19 @@ test("build-www copies the app for the phones and for the desktop", () => {
   fs.rmSync(path.join(dir, "www-desktop"), { recursive: true });
 });
 
+test("a keel-site in index.html is the build's web address", () => {
+  const { build, siteMeta } = require(path.join(dir, "tools/build-www.js"));
+  const file = path.join(dir, "index.html"), html = fs.readFileSync(file, "utf8");
+  try {
+    assert.strictEqual(siteMeta(dir), null);
+    fs.writeFileSync(file, html.replace("<meta charset=\"utf-8\">", '<meta charset="utf-8">\n  <meta name="keel-site" content="https://example.com/trail">'));
+    assert.strictEqual(build(path.join(dir, "www"), dir, false).info.webUrl, "https://example.com/trail/");
+  } finally {
+    fs.writeFileSync(file, html);
+    fs.rmSync(path.join(dir, "www"), { recursive: true, force: true });
+  }
+});
+
 test("the Android manifest, iOS project and desktop files tools do their part", () => {
   const { patch } = require(path.join(dir, "tools/android-manifest.js"));
   const xml = '<manifest xmlns:android="x">\n  <application android:allowBackup="true" android:label="a">\n  </application>\n</manifest>';

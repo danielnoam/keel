@@ -20,7 +20,7 @@ serves straight from the repo and the native builds need no extra step.
 | `src/keel/platform.js` | Where the app runs, on `window.Keel.platform`: phone (`native`, `os`, `plugin()`), desktop (Tauri), browser; `app-build.json`; links to other sites go to the device's browser; `deadline()`. Each app's platform.js keeps the rest |
 | `src/keel/motion.js` | Springs sampled into CSS `linear()` and the moves made with them, on `window.Keel.motion.create({touch, desktop, ...})`: screens, sheets, menus, dialogs, lists, press feedback; reduced motion and Animations off handled; sideways moves mirror right to left (`rtl()`, `x(n)`). Each app passes its own springs |
 | `src/keel/i18n.js` | The reader's language, on `window.Keel.i18n.create({key, langs})`: `t("English")` keyed by the English (shown as is until a table has it), plurals, `{name}` filling, `data-t` markup, `lang` and `dir="rtl"` on `<html>`, the device's language or a saved choice, dates, numbers and lists through `Intl`. Each app keeps its tables in `src/lang/<code>.js` |
-| `src/keel/releases.js` | The app's own releases, on `window.Keel.releases`: the latest one (update check), the test builds list, opening a test build in the browser, and the channel (`channel()`, `setChannel()`, `check(mine, kind)`: release, or unreleased for the newest build of main). Each app keeps its bar and screens |
+| `src/keel/releases.js` | The app's own releases, on `window.Keel.releases`: the latest one (update check), the test builds list, opening a test build in the browser, and the channel (`channel()`, `setChannel()`, `check(mine, kind)`: release, or unreleased for the newest build of main). Its home is owner.github.io/repo/, or index.html's `keel-site` and `keel-repo` metas. Each app keeps its bar and screens |
 | `src/keel/sw-preview.js` | The service worker's half of a test build in the browser (`importScripts`): that commit's files, the Back to the release bar |
 | `tools/release.js` | `node tools/release.js x.y.z`: bumps APP_VERSION, `?v=` tags and the sw.js cache, folds `changes/*.md` into CHANGELOG.md |
 | `tools/unreleased.js` | The unreleased channel: `note` in a build of main writes what it is beside the APK or installer (the artifact `unreleased-<kind>`); `fetch <dir>` in the Pages deploy puts the newest of each, with `build.json`, under the site's `unreleased/`. Not on the Releases page; hidden, not private |
@@ -89,6 +89,21 @@ into an app, and an app made from them is its own from then on.
 and its first release; `.github/workflows/template-native.yml` builds that
 app's APK, Windows and Linux app and iOS app for real on any pull request
 that touches the template.
+
+## Moving an app to a custom domain or an organization
+
+GitHub redirects a moved repo, its API and its release downloads, but
+not its Pages address: `owner.github.io/repo/` stops answering. An
+installed copy keeps the address it was built with, so the new one has
+to ship first:
+
+1. In index.html, add `<meta name="keel-site" content="https://<new address>/">`
+   and `<meta name="keel-repo" content="<owner>/<repo>">`, and the site's
+   origin to `connect-src` (`csp.check` fails until it's there).
+2. Point anything else that names the old address (share links, sign-in
+   origins) at the new one, release, and give the release time to reach
+   people.
+3. Then set the custom domain or move the repo.
 
 ## Changing a shared file
 

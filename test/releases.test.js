@@ -132,6 +132,30 @@ const RELEASES = [
     assert.strictEqual(await (await P.respond(ev("src/app.js"), release)).text(), "release");
   });
 
+  await test("keel-site and keel-repo: a custom domain finds its repo and site", () => {
+    const metas = {};
+    global.document = { querySelector: (q) => { const n = /keel-(\w+)/.exec(q)[1]; return n in metas ? { getAttribute: () => metas[n] } : null; } };
+    const was = { ...global.location };
+    try {
+      Object.assign(global.location, { protocol: "https:", hostname: "example.com", pathname: "/app/" });
+      assert.strictEqual(R.webRepo(), null, "no meta, no repo");
+      metas.repo = "someone/app"; metas.site = "https://example.com/app";
+      assert.strictEqual(R.webRepo(), "someone/app");
+      assert.strictEqual(R.metaSite(), "https://example.com/app/");
+      const a = R.create({ name: "App" });
+      assert.strictEqual(a.repo(), "someone/app");
+      assert.strictEqual(a.site(), "https://example.com/app/");
+      Object.assign(global.location, { protocol: "https:", hostname: "localhost", pathname: "/" });
+      assert.strictEqual(R.webRepo(), null, "an installed copy takes its repo from its build, not the meta");
+      assert.strictEqual(R.create({ name: "App", repo: () => "someone/app" }).site(), "https://example.com/app/", "but looks for builds at keel-site");
+      metas.site = "http://example.com/";
+      assert.strictEqual(R.metaSite(), null, "https only");
+      Object.assign(global.location, { hostname: "someone.github.io", pathname: "/app/" });
+      metas.repo = "other/thing";
+      assert.strictEqual(R.webRepo(), "someone/app", "on github.io the address wins");
+    } finally { Object.assign(global.location, was); delete global.document; }
+  });
+
   await test("the site of a repo", () => {
     assert.strictEqual(R.siteOf("DanielNoam/LifeLog"), "https://danielnoam.github.io/LifeLog/");
     assert.strictEqual(R.siteOf(""), null);

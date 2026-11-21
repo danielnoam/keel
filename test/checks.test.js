@@ -71,6 +71,15 @@ test("what breaks the policy is named", () => {
   assert.ok(csp.check('<link rel="icon">' + GOOD).some((x) => /must come before/.test(x)));
 });
 
+test("keel-site must be https and allowed by connect-src; keel-repo owner/name", () => {
+  const withMeta = (site, repo, connect = "") => GOOD.replace("object-src", (connect ? "connect-src 'self' " + connect + "; " : "") + "object-src")
+    .replace("<link", '<meta name="keel-site" content="' + site + '"><meta name="keel-repo" content="' + repo + '"><link');
+  assert.deepStrictEqual(csp.check(withMeta("https://example.com/app/", "someone/app", "https://example.com")), []);
+  assert.ok(csp.check(withMeta("https://example.com/app/", "someone/app")).some((x) => /connect-src doesn't allow keel-site's https:\/\/example\.com/.test(x)));
+  assert.ok(csp.check(withMeta("http://example.com/", "someone/app", "http://example.com")).some((x) => /https address/.test(x)));
+  assert.ok(csp.check(withMeta("https://example.com/", "not a repo", "https://example.com")).some((x) => /owner\/name/.test(x)));
+});
+
 test("code that needs unsafe-inline or unsafe-eval is named", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "keel-csp-"));
   const ok = path.join(dir, "ok.js"), bad = path.join(dir, "bad.js");
