@@ -4,7 +4,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { bump, mergeNotes } = require("../tools/release.js");
+const { bump, mergeNotes, withPending } = require("../tools/release.js");
 
 let passed = 0;
 function test(name, fn) {
@@ -65,6 +65,24 @@ test("release.js keeps any app's cache prefix", () => {
   });
   assert.strictEqual(bump("1.0.1", { root: dir }).cache, "waypage-v130");
   assert.ok(fs.readFileSync(path.join(dir, "sw.js"), "utf8").includes('"waypage-v130"'));
+});
+
+test("a build's CHANGELOG.md has what's merged and not released on top", () => {
+  const log = "# Changelog\n\nIntro.\n\n## [1.2.3] - 2026-01-01\n\n### Fixed\n- Old.\n";
+  const dir = fixture({
+    "CHANGELOG.md": log,
+    "changes/README.md": "How to write a note.\n",
+    "changes/fix-b.md": "### Fixed\n- Bee.\n",
+    "changes/feature-a.md": "### Added\n- Ay.\n",
+  });
+  assert.strictEqual(withPending(dir),
+    "# Changelog\n\nIntro.\n\n## [Unreleased]\n\n### Added\n- Ay.\n\n### Fixed\n- Bee.\n\n## [1.2.3] - 2026-01-01\n\n### Fixed\n- Old.\n");
+  assert.strictEqual(fs.readFileSync(path.join(dir, "CHANGELOG.md"), "utf8"), log);
+  assert.strictEqual(fs.readdirSync(path.join(dir, "changes")).length, 3);
+  const old = fixture({ "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- X.\n\n## [1.0.0] - 2026-01-01\n\n### Added\n- Y.\n" });
+  assert.strictEqual(withPending(old), "# Changelog\n\n## [Unreleased]\n\n### Fixed\n- X.\n\n## [1.0.0] - 2026-01-01\n\n### Added\n- Y.\n");
+  const none = "# Changelog\n\n## Unreleased\n\n## [1.0.0] - 2026-01-01\n\n### Added\n- Y.\n";
+  assert.strictEqual(withPending(fixture({ "CHANGELOG.md": none, "changes/README.md": "x\n" })), none);
 });
 
 console.log(passed + " passed");

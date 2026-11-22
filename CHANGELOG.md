@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## [0.16.0] - 2026-11-22
+
+### Added
+- `tools/release.js`: `withPending(root)` is CHANGELOG.md with what's
+  merged and not released yet (the notes in `changes/`, and any old
+  `## Unreleased` section) on top as `## [Unreleased]`, for a build to
+  ship. A build of main (the unreleased channel, a test build) then lists
+  in its changelog what it has beyond its version; a release build has
+  no notes left, so it ships the file as it is. `pending(root)` is the
+  merged entry itself; `bump()` uses it.
+- Template: `tools/build-www.js` writes CHANGELOG.md through
+  `withPending()` (once the app ships CHANGELOG.md).
+- **Apps should**, to show it: write CHANGELOG.md in `tools/build-www.js`
+  through `require("./release.js").withPending(root)`, and have their
+  changelog screen read `## [Unreleased]` (no date) as not released yet.
 ## [0.15.0] - 2026-11-21
 
 ### Added
