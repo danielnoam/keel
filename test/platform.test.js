@@ -10,10 +10,10 @@ async function test(name, fn) {
 }
 
 const FILE = path.join(__dirname, "../src/keel/platform.js");
-function load({ cap, tauri, ua = "Mozilla/5.0 (X11; Linux)", build = { repo: "me/app" } } = {}) {
+function load({ cap, tauri, ua = "Mozilla/5.0 (X11; Linux)", nav = {}, build = { repo: "me/app" } } = {}) {
   const opened = [], listeners = [], classes = new Set(), asked = [];
   global.location = { href: "https://localhost/index.html", origin: "https://localhost" };
-  Object.defineProperty(globalThis, "navigator", { value: { userAgent: ua }, configurable: true });
+  Object.defineProperty(globalThis, "navigator", { value: { userAgent: ua, ...nav }, configurable: true });
   global.document = { documentElement: { classList: { add: (c) => classes.add(c) } }, addEventListener: (t, f) => listeners.push(f) };
   global.fetch = async (u) => { asked.push(u); return { ok: true, json: async () => build }; };
   global.window = { Capacitor: cap, __TAURI__: tauri, open: (u, t) => { opened.push([u, t]); return {}; } };
@@ -30,6 +30,18 @@ const phone = (os, plugins = {}) => ({ isNativePlatform: () => true, getPlatform
     assert.strictEqual(await K.ready, null);
     assert.deepStrictEqual([asked, listeners.length, classes.size], [[], 0, 0]);
     window.open("https://example.org/");
+  });
+
+  await test("the device: the app's own os, or a browser's guess", async () => {
+    const dev = (o) => { const { K } = load(o); return [K.device, K.phone]; };
+    assert.deepStrictEqual(dev({ cap: phone("ios") }), ["ios", true]);
+    assert.deepStrictEqual(dev({ ua: "Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/130 Mobile" }), ["android", true]);
+    assert.deepStrictEqual(dev({ ua: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" }), ["ios", true]);
+    assert.deepStrictEqual(dev({ ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", nav: { platform: "MacIntel", maxTouchPoints: 5 } }), ["ios", true]);
+    assert.deepStrictEqual(dev({ ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", nav: { platform: "MacIntel", maxTouchPoints: 0 } }), ["mac", false]);
+    assert.deepStrictEqual(dev({ ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", nav: { userAgentData: { platform: "Windows" } } }), ["windows", false]);
+    assert.deepStrictEqual(dev({}), ["linux", false]);
+    assert.deepStrictEqual(dev({ ua: "Something" }), ["other", false]);
   });
 
   await test("a phone: its os, its plugins, app-build.json, the native class", async () => {
