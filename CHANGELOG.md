@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.17.0] - 2026-11-24
+
+### Added
+- `src/keel/platform.js`: `device` ("android", "ios", "mac", "windows",
+  "linux" or "other") and `phone`. In an app it's the app's own os; in a
+  browser a best guess from userAgentData, platform and the user agent
+  (an iPad that reports a Mac with touch counts as ios). Meant for what
+  to offer (which map apps to link to), never for security. Nothing an
+  app must change.
+
 ## [0.16.0] - 2026-11-22
 
 ### Added
