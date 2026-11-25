@@ -3,7 +3,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { contrast, csp, i18n, motion, waits } = require("../tools/keel-checks.js");
+const { contrast, csp, i18n, motion, waits, unused } = require("../tools/keel-checks.js");
 
 let passed = 0;
 function test(name, fn) {
@@ -119,6 +119,41 @@ test("waits: fixed waits at or over the bar are found with their line", () => {
   fs.writeFileSync(f, "await page.waitForTimeout(300);\nawait page.waitForTimeout(1800);\nawait new Promise((r) => setTimeout(r, 2000));\n");
   try { assert.deepStrictEqual(waits.find([f], 1000).map((w) => [w.line, w.ms]), [[2, 1800], [3, 2000]]); }
   finally { fs.unlinkSync(f); }
+});
+
+function tmpFiles(files, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "keel-unused-"));
+  const paths = Object.fromEntries(Object.entries(files).map(([n, text]) => { const p = path.join(dir, n); fs.writeFileSync(p, text); return [n, p]; }));
+  try { fn(paths); } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+}
+
+test("unused.classes: a class no file names is found; built prefixes, comments and urls aren't classes", () => {
+  const css = ".row { }\n.row-old, .card:hover { }\n/* .gone */\n.theme-dark .x { background: url(a.svg); width: .5em; }\n";
+  tmpFiles({ "a.js": 'el.className = "row card";', "i.html": '<b class="x">' }, (p) => {
+    assert.deepStrictEqual(unused.classes(css, [p["a.js"], p["i.html"]], { built: ["theme-"] }), ["row-old"]);
+  });
+});
+
+test("unused.functions: defined and never named again is found with its line; skip and callers pass", () => {
+  tmpFiles({
+    "a.js": "function used() {}\nfunction lost() {}\nconst arrow = (x) => x;\nconst listed = async () => 1;\nconst value = 3;\n",
+    "b.js": "used(); // arrow\n",
+  }, (p) => {
+    const out = unused.functions([p["a.js"]], [p["a.js"], p["b.js"]], { skip: ["listed"] });
+    assert.deepStrictEqual(out.map((d) => [d.line, d.name]), [[2, "lost"]]);
+  });
+});
+
+test("unused.twice: a function defined in two files is found, only limits it", () => {
+  tmpFiles({
+    "a.js": "const pad = (n) => String(n).padStart(2, \"0\");\nfunction init() {}\n",
+    "b.js": "  const pad = (n) => (n < 10 ? \"0\" + n : \"\" + n);\n  function init() {}\n",
+    "c.js": "pad(1);\n",
+  }, (p) => {
+    const files = [p["a.js"], p["b.js"], p["c.js"]];
+    assert.deepStrictEqual(unused.twice(files).map((d) => [d.name, d.files.length]), [["pad", 2], ["init", 2]]);
+    assert.deepStrictEqual(unused.twice(files, { only: ["pad"] }).map((d) => d.name), ["pad"]);
+  });
 });
 
 test("i18n.literals: English set straight into the UI is found, t() and en-only lines pass", () => {

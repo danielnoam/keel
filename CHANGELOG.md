@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## [0.18.0] - 2026-11-25
+
+### Added
+- `tools/keel-checks.js`: `unused.classes(css, used, { built })` (a CSS
+  class no file names), `unused.functions(files, used, { skip })` (a
+  function never named again) and `unused.twice(files, { only })` (a
+  function defined in more than one file). Names only, so a name in a
+  comment counts as used: it can miss dead code, but what it reports is
+  dead. From LifeLog's 2026-11-25 health pass (eleven dead classes,
+  three uncalled functions, the same date helpers re-typed in 17 files).
+- `RULES.md`: "Nothing left behind": dead code goes with the change that
+  made it dead, and one helper has one home.
+- Template: `test/deadcode.test.js` runs all three.
+- **Apps should**: run `unused.classes` and `unused.functions` in their
+  tests (LifeLog's `test/deadcode.test.js`), and `unused.twice` once
+  their copies are gone (or with `only` for the helpers already in one
+  place).
+
 ## [0.17.0] - 2026-11-24
 
 ### Added

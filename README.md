@@ -27,8 +27,8 @@ serves straight from the repo and the native builds need no extra step.
 | `tools/unreleased.js` | The unreleased channel: `note` in a build of main writes what it is beside the APK or installer (the artifact `unreleased-<kind>`); `fetch <dir>` in the Pages deploy puts the newest of each, with `build.json`, under the site's `unreleased/`. Not on the Releases page; hidden, not private |
 | `tools/android-version.js` | Stamps APP_VERSION into the Android project's versionCode |
 | `tools/keel-sync.js` | Pulls a keel release into an app and checks it |
-| `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, its Content-Security-Policy and the code under it, each language's table against the words the code uses (missing, stale, broken `{name}`) and UI text set from an English literal, RULES.md's motion rules in its CSS (curves are tokens, nothing animates font-size, padding or margin), and long fixed waits in its tests |
-| `RULES.md` | The rules that stop bugs and drift: every language and screen, motion, components, looks that read as machine-made, words, saving, state, timers, tests. The app's own DESIGN.md and CONTRIBUTING.md name its classes and helpers |
+| `tools/keel-checks.js` | Checks for an app's tests: WCAG contrast between theme tokens read from its CSS, its Content-Security-Policy and the code under it, each language's table against the words the code uses (missing, stale, broken `{name}`) and UI text set from an English literal, RULES.md's motion rules in its CSS (curves are tokens, nothing animates font-size, padding or margin), long fixed waits in its tests, and dead code (CSS classes and functions nothing uses, a function defined in two files) |
+| `RULES.md` | The rules that stop bugs and drift: every language and screen, motion, components, looks that read as machine-made, nothing left behind, words, saving, state, timers, tests. The app's own DESIGN.md and CONTRIBUTING.md name its classes and helpers |
 | `test/keel.test.js` | Fails an app's tests if a keel file was edited there |
 | `.claude/skills/github-pages` | The GitHub Pages skill |
 
