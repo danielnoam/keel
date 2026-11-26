@@ -185,6 +185,32 @@ test("commitFiles makes one commit, and remakes it when the branch moved", async
   assert.strictEqual(await gh.getRaw("pages/1.html"), "<p>1</p>");
 });
 
+test("commitFiles with parent commits on it, and fails with moved when the branch moved, keeping the other commit", async () => {
+  const { f, gh } = setup();
+  f.put("trips/a.json", "old");
+  const parent = f.raw.refs.main;
+  await gh.commitFiles([{ path: "trips/a.json", text: "mine" }], "Sync", { parent });
+  assert.strictEqual(await gh.getRaw("trips/a.json"), "mine");
+  const seen = f.raw.refs.main;
+  // Another device's commit lands after this one read the repo.
+  f.put("trips/a.json", "theirs");
+  await assert.rejects(gh.commitFiles([{ path: "trips/a.json", text: "stale" }], "Sync", { parent: seen }), (e) => e.moved === true);
+  assert.strictEqual(await gh.getRaw("trips/a.json"), "theirs");
+  // Moving during the call is caught too, at the ref update.
+  const now = f.raw.refs.main;
+  f.moveFirst = () => f.put("trips/a.json", "racing");
+  await assert.rejects(gh.commitFiles([{ path: "trips/a.json", text: "stale" }], "Sync", { parent: now }), (e) => e.moved === true);
+  assert.strictEqual(await gh.getRaw("trips/a.json"), "racing");
+});
+
+test("commitFiles with parent null starts a missing branch, and fails with moved once it exists", async () => {
+  const { f, gh } = setup();
+  const root = async () => [];
+  await gh.commitFiles([{ path: "a", text: "1" }], "Add", { branch: "pics", root, parent: null });
+  assert.ok(f.raw.refs.pics);
+  await assert.rejects(gh.commitFiles([{ path: "b", text: "2" }], "Add", { branch: "pics", root, parent: null }), (e) => e.moved === true);
+});
+
 test("commitFiles starts a missing branch from root, and refuses without it", async () => {
   const { f, gh } = setup();
   let asked = 0;

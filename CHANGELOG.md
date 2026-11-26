@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## [0.19.0] - 2026-11-26
+
+### Added
+- `github.js`: `commitFiles(files, message, { parent })`, the head sha the
+  files were worked out from (null: the branch was missing). The commit
+  goes on that head or not at all: a branch that moved fails with
+  `e.moved`, and the ref update itself enforces it (GitHub refuses one
+  that isn't a fast forward). Without it, a `beforeTry` check of the head
+  leaves a gap before commitFiles reads the head again: another device's
+  commit landing there was overwritten by files made from the older tree.
+  Found in Tripboard's sync and CLI, which both had that gap.
+- **Apps should**: pass `parent` from any sync that merges against the
+  head it read, instead of (or beside) a `beforeTry` head check.
+
 ## [0.18.0] - 2026-11-25
 
 ### Added
