@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## [0.20.0] - 2026-11-27
+
+### Added
+- `src/keel/changelog.js`, on `window.Keel.changelog`: `parse(md)` reads
+  CHANGELOG.md into `{ version, date, sections: [{ title, items }] }`
+  (Markdown marks dropped, an empty `## [Unreleased]` left out),
+  `load(url, fetchText?)` caches it and tries again after a failure,
+  `mine(entries, version)` is the entry a build is (`Unreleased` when
+  withPending() put one on top, so test and unreleased builds show "Not
+  released yet" as theirs), `between(entries, from, to)` is what an
+  update brings. Waypage's parser, made shared before Tripboard became the
+  third app to write one.
+- Not loaded by the template yet; an app adds the script tag and its
+  sw.js ASSETS line when it shows a changelog.
+
 ## [0.19.0] - 2026-11-26
 
 ### Added
